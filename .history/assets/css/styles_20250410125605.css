@@ -1,0 +1,132 @@
+:root {
+  --primary-color: #2563eb; /* Azul FastCripto */
+  --primary-dark: #1d4ed8;
+  --secondary-color: #0f172a; /* Azul escuro FastCripto */
+  --accent-color: #3b82f6;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --bg-color: #f8fafc;
+  --text-color: #1e293b;
+  --light-gray: #e2e8f0;
+  --border-color: #cbd5e1;
+  --card-bg: #ffffff;
+}
+
+/* Arquivo de estilos principais */
+
+/* Validação de Formulários */
+.input-error {
+    border-color: var(--danger-color) !important;
+    box-shadow: 0 0 0 1px var(--danger-color) !important;
+}
+
+.validation-error {
+    color: var(--danger-color);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.validation-error:before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 0.25rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='8' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'%3E%3C/line%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Notificações In-App */
+#notifications-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 350px;
+    width: calc(100% - 40px);
+}
+
+.in-app-notification {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    animation: notification-enter 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.notification-hiding {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
+.notification-icon {
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.notification-info .notification-icon {
+    color: var(--primary-color);
+}
+
+.notification-success .notification-icon {
+    color: var(--success-color);
+}
+
+.notification-warning .notification-icon {
+    color: var(--warning-color);
+}
+
+.notification-error .notification-icon {
+    color: var(--danger-color);
+}
+
+.notification-content {
+    flex: 1;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.notification-close {
+    cursor: pointer;
+    color: #64748b;
+    margin-left: 12px;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.notification-close:hover {
+    color: var(--text-color);
+}
+
+@keyframes notification-enter {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsividade para Notificações */
+@media (max-width: 480px) {
+    #notifications-container {
+        top: auto;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        max-width: none;
+        width: auto;
+    }
+}

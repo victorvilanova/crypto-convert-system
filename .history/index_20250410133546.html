@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastCripto - Conversão de Criptomoedas</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/responsive.css">
+    
+    <script>
+        // Detecção do ambiente FastCripto com base no domínio
+        (function () {
+            let configFile = 'config.prod.js';
+            const hostname = window.location.hostname;
+
+            if (hostname.includes('dev.fastcripto.com')) {
+                configFile = 'config.dev.js';
+                console.log('Ambiente FastCripto: Desenvolvimento');
+            } else if (hostname.includes('teste.fastcripto.com')) {
+                configFile = 'config.teste.js';
+                console.log('Ambiente FastCripto: Testes');
+            } else {
+                console.log('Ambiente FastCripto: Produção');
+            }
+
+            // Inserir a tag de script com o arquivo de configuração apropriado
+            const configScript = document.createElement('script');
+            configScript.src = `assets/js/config/${configFile}`;
+            document.head.appendChild(configScript);
+        })();
+    </script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo"><span class="logo-icon">₿</span> FastCripto</div>
+                <nav>
+                    <ul>
+                        <li><a href="#" class="tab-nav active" data-tab="converter">Conversor</a></li>
+                        <li><a href="#" class="tab-nav" data-tab="transactions">Transações</a></li>
+                        <li><a href="#" class="tab-nav" data-tab="rates">Cotações</a></li>
+                        <li><a href="#" class="tab-nav" data-tab="account">Minha Conta</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Seção do Conversor -->
+            <section id="converter" class="tab-content active">
+                <h1>Converta Reais para Criptomoedas</h1>
+                <p class="subtitle">Simule a conversão com cálculo automático de impostos e taxas.</p>
+
+                <div class="conversion-card">
+                    <div class="conversion-steps">
+                        <div class="step active">1. Simular</div>
+                        <div class="step">2. Revisar</div>
+                        <div class="step">3. KYC</div>
+                        <div class="step">4. Concluir</div>
+                    </div>
+
+                    <form id="conversion-form">
+                        <div class="form-group">
+                            <label for="brl-amount">Valor em Reais (R$)</label>
+                            <input type="number" id="brl-amount" min="100" step="10" placeholder="Ex: 1000" required>
+                            <small>Mínimo: R$ 100,00</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Selecione a Criptomoeda</label>
+                            <div class="crypto-options">
+                                <label class="crypto-option">
+                                    <input type="radio" name="crypto-currency" value="BTC" checked>
+                                    <span class="crypto-icon">₿</span>
+                                    <span class="crypto-name">Bitcoin</span>
+                                    <span class="crypto-ticker">BTC</span>
+                                </label>
+                                <label class="crypto-option">
+                                    <input type="radio" name="crypto-currency" value="ETH">
+                                    <span class="crypto-icon">Ξ</span>
+                                    <span class="crypto-name">Ethereum</span>
+                                    <span class="crypto-ticker">ETH</span>
+                                </label>
+                                <label class="crypto-option">
+                                    <input type="radio" name="crypto-currency" value="USDT">
+                                    <span class="crypto-icon">₮</span>
+                                    <span class="crypto-name">Tether</span>
+                                    <span class="crypto-ticker">USDT</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Escolha a Rede</label>
+                            <div class="network-options">
+                                <label class="network-option">
+                                    <input type="radio" name="network" value="BTC" class="network-btc" checked>
+                                    <span>Bitcoin</span>
+                                </label>
+                                <label class="network-option">
+                                    <input type="radio" name="network" value="ETH" class="network-eth">
+                                    <span>Ethereum</span>
+                                </label>
+                                <label class="network-option">
+                                    <input type="radio" name="network" value="BSC" class="network-bsc">
+                                    <span>BSC</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="wallet-address">Endereço da Carteira</label>
+                            <input type="text" id="wallet-address" placeholder="Ex: 0x1234..." required>
+                        </div>
+
+                        <div class="conversion-result hidden" id="conversion-result">
+                            <h3>Resumo da Conversão</h3>
+                            <div class="result-row">
+                                <span>Valor em Reais:</span>
+                                <span id="result-brl-amount">R$ 0,00</span>
+                            </div>
+                            <div class="result-row">
+                                <span>IOF (0,38%):</span>
+                                <span id="result-iof">- R$ 0,00</span>
+                            </div>
+                            <div class="result-row">
+                                <span>Imposto de Renda (15%):</span>
+                                <span id="result-ir">- R$ 0,00</span>
+                            </div>
+                            <div class="result-row">
+                                <span>Taxa de Serviço (10%):</span>
+                                <span id="result-service-fee">- R$ 0,00</span>
+                            </div>
+                            <div class="result-row">
+                                <span>Taxa de Rede:</span>
+                                <span id="result-network-fee">- R$ 0,00</span>
+                            </div>
+                            <div class="result-row total">
+                                <span>Valor Líquido:</span>
+                                <span id="result-net-amount">R$ 0,00</span>
+                            </div>
+                            <div class="result-row crypto-result">
+                                <span>Você receberá:</span>
+                                <span id="result-crypto-amount">0 BTC</span>
+                            </div>
+                            <div class="result-row rate-info">
+                                <span>Cotação utilizada:</span>
+                                <span id="result-rate">R$ 0,00</span>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" id="btn-calculate" class="btn primary">Calcular Conversão</button>
+                            <button type="button" id="btn-proceed" class="btn success hidden">Prosseguir</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Seção de Transações -->
+            <section id="transactions" class="tab-content">
+                <h1>Histórico de Transações</h1>
+                <p class="subtitle">Acompanhe o status de suas conversões.</p>
+                
+                <div class="transactions-empty" id="transactions-empty">
+                    <p>Você ainda não realizou nenhuma transação.</p>
+                    <button class="btn primary" id="btn-new-transaction">Realizar Conversão</button>
+                </div>
+
+                <div class="transactions-list" id="transactions-list"></div>
+            </section>
+
+            <!-- Seção de Cotações -->
+            <section id="rates" class="tab-content">
+                <h1>Cotações Atualizadas</h1>
+                <p class="subtitle">Acompanhe os valores das principais criptomoedas.</p>
+                
+                <div class="rates-control">
+                    <span id="last-update-time"></span>
+                    <button id="manual-refresh" class="btn small">Atualizar</button>
+                </div>
+
+                <div class="rates-loader" id="rates-loader"></div>
+
+                <div class="rates-grid">
+                    <div class="rate-card">
+                        <div class="rate-icon">₿</div>
+                        <div class="rate-info">
+                            <h3>Bitcoin</h3>
+                            <p class="rate-ticker">BTC</p>
+                            <p class="rate-value" id="btc-rate">R$ 0,00</p>
+                        </div>
+                    </div>
+                    <div class="rate-card">
+                        <div class="rate-icon">Ξ</div>
+                        <div class="rate-info">
+                            <h3>Ethereum</h3>
+                            <p class="rate-ticker">ETH</p>
+                            <p class="rate-value" id="eth-rate">R$ 0,00</p>
+                        </div>
+                    </div>
+                    <div class="rate-card">
+                        <div class="rate-icon">₮</div>
+                        <div class="rate-info">
+                            <h3>Tether</h3>
+                            <p class="rate-ticker">USDT</p>
+                            <p class="rate-value" id="usdt-rate">R$ 0,00</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção de Conta -->
+            <section id="account" class="tab-content">
+                <h1>Minha Conta</h1>
+                <p class="subtitle">Gerencie seus dados e verificações.</p>
+                
+                <div class="account-card">
+                    <h2>Verificação KYC</h2>
+                    <p>Complete o processo de verificação de identidade para realizar conversões.</p>
+                    <button id="btn-start-kyc" class="btn primary">Iniciar Verificação</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <h3 class="footer-heading">FastCripto</h3>
+                    <p>Sua plataforma segura para conversão de criptomoedas no Brasil.</p>
+                </div>
+                <div>
+                    <h3 class="footer-heading">Links Rápidos</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Início</a></li>
+                        <li><a href="#">Como Funciona</a></li>
+                        <li><a href="#">Taxas e Limites</a></li>
+                        <li><a href="#">Suporte</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="footer-heading">Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="termos.html">Termos de Serviço</a></li>
+                        <li><a href="politica-privacidade.html">Política de Privacidade</a></li>
+                        <li><a href="#">Compliance</a></li>
+                        <li><a href="#">KYC/AML</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="footer-heading">Contato</h3>
+                    <ul class="footer-links">
+                        <li><a href="mailto:suporte@fastcripto.com">suporte@fastcripto.com</a></li>
+                        <li><a href="tel:+551134567890">+55 (11) 3456-7890</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 FastCripto. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Container para notificações in-app -->
+    <div id="notifications-container"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

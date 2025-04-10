@@ -7,13 +7,13 @@
 export function addTransaction(transaction) {
   // Obter transações existentes
   const transactions = getTransactionHistory();
-
+  
   // Adicionar nova transação
   transactions.push(transaction);
-
+  
   // Salvar no armazenamento local
   saveTransactions(transactions);
-
+  
   return transaction;
 }
 
@@ -31,33 +31,33 @@ export function saveTransactions(transactions) {
 // Obter uma transação específica pelo ID
 export function getTransactionById(id) {
   const transactions = getTransactionHistory();
-  return transactions.find((t) => t.id === id);
+  return transactions.find(t => t.id === id);
 }
 
 // Atualizar o status de uma transação
 export function updateTransactionStatus(id, status) {
   const transactions = getTransactionHistory();
-  const index = transactions.findIndex((t) => t.id === id);
-
+  const index = transactions.findIndex(t => t.id === id);
+  
   if (index !== -1) {
     transactions[index].status = status;
     transactions[index].updatedAt = new Date();
-
+    
     // Disparar evento de mudança de status
     const event = new CustomEvent('transactionStatusChanged', {
       detail: {
         transaction: transactions[index],
         oldStatus: transactions[index].status,
-        newStatus: status,
-      },
+        newStatus: status
+      }
     });
     document.dispatchEvent(event);
-
+    
     // Salvar alterações
     saveTransactions(transactions);
     return true;
   }
-
+  
   return false;
 }
 
@@ -71,5 +71,5 @@ window.transactionsModule = {
   addTransaction,
   getTransactionHistory,
   getTransactionById,
-  updateTransactionStatus,
+  updateTransactionStatus
 };
