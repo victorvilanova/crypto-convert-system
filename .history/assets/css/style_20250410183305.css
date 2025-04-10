@@ -1,0 +1,78 @@
+/*** CSS para o banner de KYC ***/
+.kyc-banner {
+  width: 100%;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeInDown 0.5s ease;
+}
+
+.kyc-banner-content {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  position: relative;
+}
+
+.kyc-banner-icon {
+  color: #e4a11b;
+  font-size: 24px;
+  margin-right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kyc-banner-text {
+  flex: 1;
+}
+
+.kyc-banner-text h3 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  color: #856404;
+}
+
+.kyc-banner-text p {
+  margin: 0;
+  color: #856404;
+}
+
+.btn-start-kyc-banner {
+  margin-left: 16px;
+  white-space: nowrap;
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #212529;
+}
+
+.btn-start-kyc-banner:hover {
+  background-color: #e0a800;
+  border-color: #d39e00;
+}
+
+.kyc-banner-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #856404;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

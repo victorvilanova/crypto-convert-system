@@ -415,23 +415,18 @@ function handleProceedConversion() {
   // Adicionar à lista de transações
   addTransactionToHistory(transaction);
 
-  // Mostrar mensagem de sucesso e instrução para KYC
+  // Mostrar mensagem de sucesso
   showAlert(
     'Transação iniciada! Complete a verificação KYC para prosseguir.',
     'success'
   );
 
-  // Redirecionar para a seção de transações após breve delay
+  // Redirecionar para a seção de transações
   setTimeout(() => {
     const transactionsTab = document.querySelector(
       '.tab-nav[data-tab="transactions"]'
     );
     if (transactionsTab) transactionsTab.click();
-
-    // Mostrar modal de KYC automaticamente após redirecionar para a seção de transações
-    setTimeout(() => {
-      showKycPrompt();
-    }, 500);
   }, 500);
 }
 
@@ -646,8 +641,11 @@ function truncateWalletAddress(address, startChars = 8, endChars = 8) {
   )}`;
 }
 
-// Função para iniciar o processo de KYC
+// Função isolada para o processo de KYC que não interfere com outras funções
 function handleStartKYC() {
+  // Salvar referências globais importantes antes de iniciar
+  const savedRates = window.cryptoRates ? {...window.cryptoRates} : null;
+  
   // Criar o modal de KYC
   const modal = document.createElement('div');
   modal.className = 'kyc-modal';
@@ -729,7 +727,7 @@ function handleStartKYC() {
             
             <div class="form-actions">
               <button type="button" class="btn secondary" id="kyc-prev-step">Voltar</button>
-              <button type="button" class="btn primary" id="kyc-submit">Enviar para Verificação</button>
+              <button type="submit" class="btn primary" id="kyc-submit">Enviar para Verificação</button>
             </div>
           </form>
         </div>
@@ -752,153 +750,200 @@ function handleStartKYC() {
 
   document.body.appendChild(modal);
 
-  // Adicionar os event listeners
-  const closeBtn = modal.querySelector('.kyc-modal-close');
-  closeBtn.addEventListener('click', function () {
-    document.body.removeChild(modal);
-  });
-
-  const nextBtn = modal.querySelector('#kyc-next-step');
-  nextBtn.addEventListener('click', function () {
-    const personalForm = modal.querySelector('#kyc-form-personal');
-    if (personalForm.checkValidity()) {
-      modal
-        .querySelector('.kyc-step[data-step="1"]')
-        .classList.remove('active');
-      modal.querySelector('.kyc-step[data-step="2"]').classList.add('active');
-    } else {
-      personalForm.reportValidity();
-    }
-  });
-
-  const prevBtn = modal.querySelector('#kyc-prev-step');
-  prevBtn.addEventListener('click', function () {
-    modal.querySelector('.kyc-step[data-step="2"]').classList.remove('active');
-    modal.querySelector('.kyc-step[data-step="1"]').classList.add('active');
-  });
-
-  // Configurar botões de upload de documentos
-  const btnDocFront = modal.querySelector('#btn-doc-front');
-  btnDocFront.addEventListener('click', function () {
-    modal.querySelector('#doc-front').click();
-  });
-
-  const btnDocBack = modal.querySelector('#btn-doc-back');
-  btnDocBack.addEventListener('click', function () {
-    modal.querySelector('#doc-back').click();
-  });
-
-  const btnDocSelfie = modal.querySelector('#btn-doc-selfie');
-  btnDocSelfie.addEventListener('click', function () {
-    modal.querySelector('#doc-selfie').click();
-  });
-
-  // Configurar preview de documentos
-  const docFront = modal.querySelector('#doc-front');
-  docFront.addEventListener('change', function () {
-    if (this.files && this.files[0]) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        modal.querySelector(
-          '#doc-front-preview'
-        ).innerHTML = `<img src="${e.target.result}" alt="Documento frente">`;
-      };
-      reader.readAsDataURL(this.files[0]);
-      btnDocFront.textContent = 'Alterar';
-    }
-  });
-
-  const docBack = modal.querySelector('#doc-back');
-  docBack.addEventListener('change', function () {
-    if (this.files && this.files[0]) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        modal.querySelector(
-          '#doc-back-preview'
-        ).innerHTML = `<img src="${e.target.result}" alt="Documento verso">`;
-      };
-      reader.readAsDataURL(this.files[0]);
-      btnDocBack.textContent = 'Alterar';
-    }
-  });
-
-  const docSelfie = modal.querySelector('#doc-selfie');
-  docSelfie.addEventListener('change', function () {
-    if (this.files && this.files[0]) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        modal.querySelector(
-          '#selfie-preview'
-        ).innerHTML = `<img src="${e.target.result}" alt="Selfie">`;
-      };
-      reader.readAsDataURL(this.files[0]);
-      btnDocSelfie.textContent = 'Alterar';
-    }
-  });
-
-  // Configurar envio de documentos
-  const submitBtn = modal.querySelector('#kyc-submit');
-  submitBtn.addEventListener('click', function () {
+  // Configurar event listeners de forma isolada
+  function setupKycEvents() {
+    // Seletores dos elementos
+    const closeButton = modal.querySelector('.kyc-modal-close');
+    const nextButton = modal.querySelector('#kyc-next-step');
+    const prevButton = modal.querySelector('#kyc-prev-step');
+    const submitButton = modal.querySelector('#kyc-submit');
+    const finishButton = modal.querySelector('#kyc-finish');
+  
+    // Botões para upload de documentos
+    const btnDocFront = modal.querySelector('#btn-doc-front');
+    const btnDocBack = modal.querySelector('#btn-doc-back');
+    const btnDocSelfie = modal.querySelector('#btn-doc-selfie');
+  
+    // Campos de arquivo
     const docFrontInput = modal.querySelector('#doc-front');
     const docBackInput = modal.querySelector('#doc-back');
     const docSelfieInput = modal.querySelector('#doc-selfie');
-
-    if (
-      !docFrontInput.files.length ||
-      !docBackInput.files.length ||
-      !docSelfieInput.files.length
-    ) {
-      alert('Por favor, envie todos os documentos necessários.');
-      return;
-    }
-
-    submitBtn.textContent = 'Enviando...';
-    submitBtn.disabled = true;
-
-    // Simular envio
-    setTimeout(function () {
-      // Atualizar transações pendentes
-      try {
-        const transactions = getTransactionsFromStorage();
-        let updated = false;
-
-        transactions.forEach((t) => {
-          if (t.status === 'pending_kyc') {
-            t.status = 'processing';
-            t.kycSubmitted = true;
-            updated = true;
-          }
-        });
-
-        if (updated) {
-          localStorage.setItem(
-            'fastcripto_transactions',
-            JSON.stringify(transactions)
-          );
-          if (window.loadUserTransactions) {
-            window.loadUserTransactions();
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao atualizar transações:', error);
+  
+    // Pré-visualizações
+    const docFrontPreview = modal.querySelector('#doc-front-preview');
+    const docBackPreview = modal.querySelector('#doc-back-preview');
+    const docSelfiePreview = modal.querySelector('#selfie-preview');
+  
+    // Formulários
+    const personalForm = modal.querySelector('#kyc-form-personal');
+    const documentsForm = modal.querySelector('#kyc-form-documents');
+  
+    // Função para limpar o modal de forma segura
+    function safelyRemoveModal() {
+      // Remover todos os event listeners para evitar memory leaks
+      closeButton.removeEventListener('click', safelyRemoveModal);
+      nextButton.removeEventListener('click', handleNextStep);
+      prevButton.removeEventListener('click', handlePrevStep);
+      btnDocFront.removeEventListener('click', handleDocFrontClick);
+      btnDocBack.removeEventListener('click', handleDocBackClick);
+      btnDocSelfie.removeEventListener('click', handleDocSelfieClick);
+      docFrontInput.removeEventListener('change', handleDocFrontChange);
+      docBackInput.removeEventListener('change', handleDocBackChange);
+      docSelfieInput.removeEventListener('change', handleDocSelfieChange);
+      documentsForm.removeEventListener('submit', handleDocumentsSubmit);
+      finishButton.removeEventListener('click', handleFinish);
+      
+      // Remover o modal do DOM
+      if (document.body.contains(modal)) {
+        document.body.removeChild(modal);
       }
-
-      // Avançar para a etapa 3
-      modal
-        .querySelector('.kyc-step[data-step="2"]')
-        .classList.remove('active');
-      modal.querySelector('.kyc-step[data-step="3"]').classList.add('active');
-    }, 2000);
-  });
-
-  // Configurar botão de finalização
-  const finishBtn = modal.querySelector('#kyc-finish');
-  finishBtn.addEventListener('click', function () {
-    document.body.removeChild(modal);
-    alert(
-      'Seus documentos foram enviados para verificação. Você receberá uma notificação quando o processo for concluído.'
-    );
-  });
+      
+      // Restaurar as referências globais importantes
+      if (savedRates) {
+        window.cryptoRates = savedRates;
+      }
+    }
+  
+    // Handlers de eventos
+    function handleNextStep() {
+      if (!personalForm.checkValidity()) {
+        personalForm.reportValidity();
+        return;
+      }
+      
+      modal.querySelector('.kyc-step[data-step="1"]').classList.remove('active');
+      modal.querySelector('.kyc-step[data-step="2"]').classList.add('active');
+    }
+  
+    function handlePrevStep() {
+      modal.querySelector('.kyc-step[data-step="2"]').classList.remove('active');
+      modal.querySelector('.kyc-step[data-step="1"]').classList.add('active');
+    }
+  
+    function handleDocFrontClick() {
+      docFrontInput.click();
+    }
+  
+    function handleDocBackClick() {
+      docBackInput.click();
+    }
+  
+    function handleDocSelfieClick() {
+      docSelfieInput.click();
+    }
+  
+    function handleDocFrontChange() {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          docFrontPreview.innerHTML = `<img src="${e.target.result}" alt="Documento frente">`;
+        };
+        reader.readAsDataURL(this.files[0]);
+        btnDocFront.textContent = 'Alterar';
+      }
+    }
+  
+    function handleDocBackChange() {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          docBackPreview.innerHTML = `<img src="${e.target.result}" alt="Documento verso">`;
+        };
+        reader.readAsDataURL(this.files[0]);
+        btnDocBack.textContent = 'Alterar';
+      }
+    }
+  
+    function handleDocSelfieChange() {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          docSelfiePreview.innerHTML = `<img src="${e.target.result}" alt="Selfie">`;
+        };
+        reader.readAsDataURL(this.files[0]);
+        btnDocSelfie.textContent = 'Alterar';
+      }
+    }
+  
+    function handleDocumentsSubmit(e) {
+      e.preventDefault();
+      
+      if (!docFrontInput.files.length || !docBackInput.files.length || !docSelfieInput.files.length) {
+        alert('Por favor, envie todos os documentos necessários.');
+        return;
+      }
+  
+      submitButton.textContent = 'Enviando...';
+      submitButton.disabled = true;
+      
+      // Usar setTimeout para simular processamento assíncrono
+      setTimeout(() => {
+        try {
+          // Atualizar transações pendentes
+          const transactions = getTransactionsFromStorage();
+          let updated = false;
+          
+          transactions.forEach(t => {
+            if (t.status === 'pending_kyc') {
+              t.status = 'processing';
+              t.kycSubmitted = true;
+              updated = true;
+            }
+          });
+          
+          if (updated) {
+            localStorage.setItem('fastcripto_transactions', JSON.stringify(transactions));
+            // Só atualiza a UI se a função existir no escopo global
+            if (typeof loadUserTransactions === 'function') {
+              loadUserTransactions();
+            }
+          }
+          
+          // Atualizar status de KYC no sistema se tiver função de usuário
+          if (typeof getUserFromStorage === 'function' && typeof saveUserToStorage === 'function') {
+            const userData = getUserFromStorage();
+            userData.kycStatus = 'pending';
+            saveUserToStorage(userData);
+            
+            // Atualizar interface para mostrar status de KYC
+            if (typeof updateKycStatus === 'function') {
+              updateKycStatus('pending');
+            }
+          }
+          
+          // Avançar para a etapa 3
+          modal.querySelector('.kyc-step[data-step="2"]').classList.remove('active');
+          modal.querySelector('.kyc-step[data-step="3"]').classList.add('active');
+        } catch (error) {
+          console.error('Erro ao processar KYC:', error);
+          alert('Ocorreu um erro ao processar a verificação. Por favor, tente novamente.');
+          submitButton.textContent = 'Enviar para Verificação';
+          submitButton.disabled = false;
+        }
+      }, 2000);
+    }
+  
+    function handleFinish() {
+      safelyRemoveModal();
+      alert('Seus documentos foram enviados para verificação. Você receberá uma notificação quando o processo for concluído.');
+    }
+  
+    // Atribuir os event listeners
+    closeButton.addEventListener('click', safelyRemoveModal);
+    nextButton.addEventListener('click', handleNextStep);
+    prevButton.addEventListener('click', handlePrevStep);
+    btnDocFront.addEventListener('click', handleDocFrontClick);
+    btnDocBack.addEventListener('click', handleDocBackClick);
+    btnDocSelfie.addEventListener('click', handleDocSelfieClick);
+    docFrontInput.addEventListener('change', handleDocFrontChange);
+    docBackInput.addEventListener('change', handleDocBackChange);
+    docSelfieInput.addEventListener('change', handleDocSelfieChange);
+    documentsForm.addEventListener('submit', handleDocumentsSubmit);
+    finishButton.addEventListener('click', handleFinish);
+  }
+  
+  // Inicializar eventos do KYC
+  setupKycEvents();
 }
 
 // Validar endereço da carteira
@@ -1066,52 +1111,4 @@ function isUserAuthenticated() {
   // Esta é uma implementação simplificada
   // Em uma aplicação real, verificaria tokens JWT, cookies, etc.
   return true;
-}
-
-// Função para mostrar o prompt de KYC quando houver transações pendentes
-function showKycPrompt() {
-  const transactions = getTransactionsFromStorage();
-  const hasPendingKyc = transactions.some((t) => t.status === 'pending_kyc');
-
-  if (hasPendingKyc) {
-    // Criar um banner proeminente que chama a atenção
-    const kycBanner = document.createElement('div');
-    kycBanner.className = 'kyc-banner';
-    kycBanner.innerHTML = `
-      <div class="kyc-banner-content">
-        <div class="kyc-banner-icon">
-          <i class="bi bi-exclamation-triangle-fill"></i>
-        </div>
-        <div class="kyc-banner-text">
-          <h3>Verificação KYC Pendente</h3>
-          <p>Você tem transações que precisam da verificação KYC para continuar o processamento.</p>
-        </div>
-        <button class="btn primary btn-start-kyc-banner">Completar KYC Agora</button>
-        <button class="kyc-banner-close">&times;</button>
-      </div>
-    `;
-
-    // Adicionar ao topo da lista de transações
-    const transactionsList = document.getElementById('transactions-list');
-    if (transactionsList) {
-      transactionsList.parentNode.insertBefore(kycBanner, transactionsList);
-
-      // Adicionar event listeners
-      kycBanner
-        .querySelector('.btn-start-kyc-banner')
-        .addEventListener('click', function () {
-          handleStartKYC();
-          kycBanner.remove();
-        });
-
-      kycBanner
-        .querySelector('.kyc-banner-close')
-        .addEventListener('click', function () {
-          kycBanner.remove();
-        });
-    } else {
-      // Se estiver em outra página, adicionar ao corpo do documento
-      document.body.appendChild(kycBanner);
-    }
-  }
 }
