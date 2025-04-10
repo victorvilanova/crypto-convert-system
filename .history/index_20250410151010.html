@@ -37,20 +37,10 @@
           <div class="logo"><span class="logo-icon">₿</span> FastCripto</div>
           <nav>
             <ul>
-              <li>
-                <a href="#" class="tab-nav active" data-tab="converter"
-                  >Conversor</a
-                >
-              </li>
+              <li><a href="#" class="tab-nav active" data-tab="converter">Conversor</a></li>
               <li><a href="#" class="tab-nav" data-tab="rates">Cotações</a></li>
-              <li>
-                <a href="#" class="tab-nav" data-tab="transactions"
-                  >Transações</a
-                >
-              </li>
-              <li>
-                <a href="#" class="tab-nav" data-tab="account">Minha Conta</a>
-              </li>
+              <li><a href="#" class="tab-nav" data-tab="transactions">Transações</a></li>
+              <li><a href="#" class="tab-nav" data-tab="account">Minha Conta</a></li>
             </ul>
           </nav>
         </div>
@@ -343,11 +333,11 @@
     <script>
       // Carregar o menu dinamicamente
       fetch('menu.html')
-        .then((response) => response.text())
-        .then((html) => {
+        .then(response => response.text())
+        .then(html => {
           document.getElementById('menu-container').innerHTML = html;
         })
-        .catch((error) => console.error('Erro ao carregar o menu:', error));
+        .catch(error => console.error('Erro ao carregar o menu:', error));
     </script>
 
     <!-- Scripts -->
