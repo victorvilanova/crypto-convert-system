@@ -8,20 +8,12 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css" />
   </head>
   <body>
-    <div
-      id="offlineAlert"
-      class="alert alert-warning sticky-top"
-      style="display: none"
-    >
-      <strong>Você está offline!</strong> Os dados de taxas podem estar
-      desatualizados.
+    <div id="offlineAlert" class="alert alert-warning sticky-top" style="display: none;">
+      <strong>Você está offline!</strong> Os dados de taxas podem estar desatualizados.
     </div>
 
     <div class="container mt-4">
@@ -30,20 +22,16 @@
           <h1 class="text-center mb-4">Sistema de Conversão de Moedas</h1>
 
           <!-- Área de mensagens temporárias -->
-          <div id="message" class="mb-3" style="display: none"></div>
+          <div id="message" class="mb-3" style="display: none;"></div>
 
           <div class="row">
             <!-- Coluna principal -->
             <div class="col-lg-8">
               <!-- Conversor -->
               <div class="card mb-4">
-                <div
-                  class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
-                >
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                   <div>
-                    <h2 class="h4 mb-0">
-                      Converter Moeda FIAT para Criptomoeda
-                    </h2>
+                    <h2 class="h4 mb-0">Converter Moeda FIAT para Criptomoeda</h2>
                     <div class="small">
                       Última atualização: <span id="lastUpdate">--:--:--</span>
                     </div>
@@ -85,28 +73,16 @@
                       </div>
                     </div>
                     <div class="d-flex justify-content-between">
-                      <button
-                        type="button"
-                        id="convertBtn"
-                        class="btn btn-primary"
-                      >
+                      <button type="button" id="convertBtn" class="btn btn-primary">
                         <i class="fas fa-exchange-alt me-1"></i> Converter
                       </button>
-                      <button
-                        type="button"
-                        id="addFavoriteBtn"
-                        class="btn btn-outline-warning"
-                      >
+                      <button type="button" id="addFavoriteBtn" class="btn btn-outline-warning">
                         <i class="fas fa-star me-1"></i> Salvar aos Favoritos
                       </button>
                     </div>
                   </form>
 
-                  <div
-                    id="loading"
-                    class="text-center my-3"
-                    style="display: none"
-                  >
+                  <div id="loading" class="text-center my-3" style="display: none">
                     <div class="spinner-border text-primary" role="status">
                       <span class="visually-hidden">Carregando...</span>
                     </div>
@@ -125,19 +101,11 @@
 
               <!-- Tabela de Taxas de Câmbio -->
               <div class="card">
-                <div
-                  class="card-header bg-secondary text-white d-flex justify-content-between align-items-center"
-                >
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                   <h2 class="h4 mb-0">Tabela de Taxas de Câmbio Atuais</h2>
                   <div class="form-check form-switch text-white">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="showAllCurrencies"
-                    />
-                    <label class="form-check-label" for="showAllCurrencies"
-                      >Mostrar todas as moedas</label
-                    >
+                    <input class="form-check-input" type="checkbox" id="showAllCurrencies">
+                    <label class="form-check-label" for="showAllCurrencies">Mostrar todas as moedas</label>
                   </div>
                 </div>
                 <div class="card-body">
@@ -195,8 +163,7 @@
                     </li>
                     <li class="list-group-item">
                       <i class="fas fa-wifi text-success me-2"></i>
-                      O sistema funciona offline, mas com taxas menos
-                      atualizadas.
+                      O sistema funciona offline, mas com taxas menos atualizadas.
                     </li>
                   </ul>
                 </div>

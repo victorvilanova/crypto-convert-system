@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arbitragem - Admin Panel</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../assets/css/admin.css" />
+    <meta name="robots" content="noindex, nofollow" />
+  </head>
+  <body class="admin-panel">
+    <!-- Barra de navegação administrativa -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="index.html">
+          <i class="fas fa-shield-alt me-2"></i>
+          Admin Panel
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#adminNavbar"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="adminNavbar">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="arbitragem.html">Arbitragem</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="configuracoes.html">Configurações</a>
+            </li>
+          </ul>
+          <div class="d-flex align-items-center">
+            <span class="text-light me-3" id="adminUsername">Admin</span>
+            <button id="adminLogoutBtn" class="btn btn-outline-danger btn-sm">
+              <i class="fas fa-sign-out-alt me-1"></i> Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Container principal -->
+    <div class="container-fluid mt-4">
+      <!-- Área de arbitragem -->
+      <div id="arbitrageContent">
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <div class="card bg-dark text-white shadow-sm">
+              <div
+                class="card-body d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  <h1 class="h3">Sistema de Arbitragem</h1>
+                  <p class="lead mb-0">
+                    Monitoramento e execução de operações de arbitragem
+                  </p>
+                </div>
+                <div>
+                  <button
+                    id="refreshArbitrageBtn"
+                    class="btn btn-outline-light"
+                  >
+                    <i class="fas fa-sync-alt me-1"></i> Atualizar
+                  </button>
+                  <div class="form-check form-switch d-inline-block ms-3">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="autoRefreshSwitch"
+                    />
+                    <label
+                      class="form-check-label text-light"
+                      for="autoRefreshSwitch"
+                      >Auto</label
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controles e Filtros -->
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <div class="card shadow">
+              <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Controles e Filtros</h5>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-3 mb-3">
+                    <label for="minProfitFilter" class="form-label"
+                      >Lucro Mínimo (%)</label
+                    >
+                    <div class="input-group">
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="minProfitFilter"
+                        min="0.1"
+                        step="0.1"
+                        value="0.5"
+                      />
+                      <span class="input-group-text">%</span>
+                    </div>
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <label for="arbitrageTypeFilter" class="form-label"
+                      >Tipo de Arbitragem</label
+                    >
+                    <select class="form-select" id="arbitrageTypeFilter">
+                      <option value="all" selected>Todos os tipos</option>
+                      <option value="triangular">Triangular</option>
+                      <option value="exchange">Entre Exchanges</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <label for="cryptoFilter" class="form-label"
+                      >Criptomoeda</label
+                    >
+                    <select class="form-select" id="cryptoFilter">
+                      <option value="all" selected>Todas</option>
+                      <option value="BTC">Bitcoin (BTC)</option>
+                      <option value="ETH">Ethereum (ETH)</option>
+                      <option value="USDT">Tether (USDT)</option>
+                      <option value="ADA">Cardano (ADA)</option>
+                      <option value="LTC">Litecoin (LTC)</option>
+                      <option value="XRP">Ripple (XRP)</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3 mb-3">
+                    <label for="sortOrder" class="form-label"
+                      >Ordenar Por</label
+                    >
+                    <select class="form-select" id="sortOrder">
+                      <option value="profit_desc" selected>Maior Lucro</option>
+                      <option value="profit_asc">Menor Lucro</option>
+                      <option value="time_desc">Mais Recente</option>
+                      <option value="time_asc">Mais Antigo</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="showExecutableOnly"
+                      />
+                      <label class="form-check-label" for="showExecutableOnly">
+                        Mostrar apenas oportunidades executáveis
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Oportunidades de Arbitragem -->
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <div class="card shadow">
+              <div
+                class="card-header bg-success text-white d-flex justify-content-between align-items-center"
+              >
+                <h5 class="mb-0">Oportunidades de Arbitragem</h5>
+                <span
+                  id="opportunityCount"
+                  class="badge bg-white text-success rounded-pill"
+                  >0</span
+                >
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Tipo</th>
+                        <th>Rota</th>
+                        <th>Lucro (%)</th>
+                        <th>Lucro Est. (USD)</th>
+                        <th>Volume</th>
+                        <th>Timestamp</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="arbitrageOpportunities">
+                      <tr>
+                        <td colspan="8" class="text-center py-3">
+                          <div
+                            class="spinner-border text-primary"
+                            role="status"
+                          >
+                            <span class="visually-hidden">Carregando...</span>
+                          </div>
+                          <p class="mt-2 mb-0">
+                            Buscando oportunidades de arbitragem...
+                          </p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Análise Detalhada -->
+        <div class="row">
+          <div class="col-md-7 mb-4">
+            <div class="card shadow">
+              <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Histórico de Execuções</h5>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-striped mb-0">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Data/Hora</th>
+                        <th>Tipo</th>
+                        <th>Rota</th>
+                        <th>Lucro Real</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="executionHistory">
+                      <tr>
+                        <td colspan="6" class="text-center py-3">
+                          Nenhuma execução registrada.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-5 mb-4">
+            <div class="card shadow">
+              <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">Estatísticas de Arbitragem</h5>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <div class="card bg-light">
+                      <div class="card-body text-center">
+                        <h6 class="text-primary mb-2">Oportunidades Hoje</h6>
+                        <h2 id="todayOpportunitiesCount">0</h2>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <div class="card bg-light">
+                      <div class="card-body text-center">
+                        <h6 class="text-success mb-2">Lucro Acumulado</h6>
+                        <h2 id="totalProfit">$0.00</h2>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <h6>Distribuição por Tipo</h6>
+                  <div class="progress mb-2">
+                    <div
+                      id="triangularProgress"
+                      class="progress-bar bg-success"
+                      role="progressbar"
+                      style="width: 60%"
+                      aria-valuenow="60"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    >
+                      60%
+                    </div>
+                    <div
+                      id="exchangeProgress"
+                      class="progress-bar bg-info"
+                      role="progressbar"
+                      style="width: 40%"
+                      aria-valuenow="40"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    >
+                      40%
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-between small">
+                    <div>
+                      <i class="fas fa-circle text-success me-1"></i> Triangular
+                    </div>
+                    <div>
+                      <i class="fas fa-circle text-info me-1"></i> Entre
+                      Exchanges
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h6>Top Criptomoedas em Arbitragem</h6>
+                  <ul class="list-group" id="topCryptosList">
+                    <li
+                      class="list-group-item d-flex justify-content-between align-items-center"
+                    >
+                      <span
+                        ><i class="fab fa-bitcoin text-warning me-2"></i>
+                        Bitcoin (BTC)</span
+                      >
+                      <span class="badge bg-primary rounded-pill">42</span>
+                    </li>
+                    <li
+                      class="list-group-item d-flex justify-content-between align-items-center"
+                    >
+                      <span
+                        ><i class="fab fa-ethereum text-primary me-2"></i>
+                        Ethereum (ETH)</span
+                      >
+                      <span class="badge bg-primary rounded-pill">28</span>
+                    </li>
+                    <li
+                      class="list-group-item d-flex justify-content-between align-items-center"
+                    >
+                      <span
+                        ><i class="fas fa-certificate text-danger me-2"></i>
+                        Cardano (ADA)</span
+                      >
+                      <span class="badge bg-primary rounded-pill">14</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Confirmação de Execução -->
+      <div
+        class="modal fade"
+        id="executeModal"
+        tabindex="-1"
+        aria-labelledby="executeModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="executeModalLabel">
+                Confirmar Execução de Arbitragem
+              </h5>
+              <button
+                type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Esta ação irá executar uma operação real de arbitragem
+                utilizando fundos disponíveis.
+              </div>
+              <h6>Detalhes da Operação:</h6>
+              <ul
+                id="operationDetails"
+                class="list-group list-group-flush mb-3"
+              >
+                <li class="list-group-item">
+                  <strong>Tipo:</strong> <span id="opType">Triangular</span>
+                </li>
+                <li class="list-group-item">
+                  <strong>Rota:</strong>
+                  <span id="opRoute">BTC → ETH → ADA → BTC</span>
+                </li>
+                <li class="list-group-item">
+                  <strong>Lucro estimado:</strong>
+                  <span id="opProfit">1.2%</span>
+                </li>
+                <li class="list-group-item">
+                  <strong>Valor USD estimado:</strong>
+                  <span id="opUsdProfit">$120.00</span>
+                </li>
+              </ul>
+              <div class="form-group">
+                <label for="amountInput" class="form-label"
+                  >Montante para operação:</label
+                >
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="opCurrency">BTC</span>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="amountInput"
+                    placeholder="0.001"
+                    step="0.001"
+                    min="0.001"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                class="btn btn-success"
+                id="confirmExecuteBtn"
+              >
+                <i class="fas fa-play me-1"></i> Executar Arbitragem
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal de Detalhes da Arbitragem -->
+      <div
+        class="modal fade"
+        id="detailsModal"
+        tabindex="-1"
+        aria-labelledby="detailsModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+              <h5 class="modal-title" id="detailsModalLabel">
+                Detalhes da Oportunidade
+              </h5>
+              <button
+                type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div class="card border-info mb-3">
+                <div class="card-header bg-light">
+                  <h6 class="mb-0" id="detailsTitle">
+                    Arbitragem Triangular #1230
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                          <strong>ID:</strong> <span id="detailsId">1230</span>
+                        </li>
+                        <li class="list-group-item">
+                          <strong>Tipo:</strong>
+                          <span id="detailsType">Triangular</span>
+                        </li>
+                        <li class="list-group-item">
+                          <strong>Rota:</strong>
+                          <span id="detailsRoute">BTC → ETH → ADA → BTC</span>
+                        </li>
+                        <li class="list-group-item">
+                          <strong>Lucro:</strong>
+                          <span id="detailsProfit" class="text-success"
+                            >1.2%</span
+                          >
+                        </li>
+                      </ul>
+                    </div>
+                    <div class="col-md-6">
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                          <strong>Timestamp:</strong>
+                          <span id="detailsTimestamp">2023-06-15 14:32:45</span>
+                        </li>
+                        <li class="list-group-item">
+                          <strong>Exchange(s):</strong>
+                          <span id="detailsExchanges">Binance</span>
+                        </li>
+                        <li class="list-group-item">
+                          <strong>Volume estimado:</strong>
+                          <span id="detailsVolume">$10,000</span>
+                        </li>
+                        <li class="list-group-item">
+                          <strong>Status:</strong>
+                          <span id="detailsStatus" class="badge bg-success"
+                            >Ativo</span
+                          >
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <h6 class="border-bottom pb-2 mb-3">Composição das Taxas</h6>
+              <div class="table-responsive">
+                <table
+                  class="table table-sm table-striped"
+                  id="detailsRatesTable"
+                >
+                  <thead>
+                    <tr>
+                      <th>Par</th>
+                      <th>Exchange</th>
+                      <th>Taxa</th>
+                      <th>Spread</th>
+                      <th>Liquidez</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>BTC/ETH</td>
+                      <td>Binance</td>
+                      <td>16.235</td>
+                      <td>0.15%</td>
+                      <td>Alta</td>
+                    </tr>
+                    <tr>
+                      <td>ETH/ADA</td>
+                      <td>Binance</td>
+                      <td>3,521.46</td>
+                      <td>0.18%</td>
+                      <td>Média</td>
+                    </tr>
+                    <tr>
+                      <td>ADA/BTC</td>
+                      <td>Binance</td>
+                      <td>0.000018</td>
+                      <td>0.22%</td>
+                      <td>Média</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h6 class="border-bottom pb-2 mb-3 mt-4">
+                Simulação de Execução
+              </h6>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="card bg-light mb-3">
+                    <div class="card-body">
+                      <h6 class="card-title">Inicial</h6>
+                      <p class="card-text" id="detailsInitial">1.0 BTC</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card bg-light mb-3">
+                    <div class="card-body">
+                      <h6 class="card-title">Final (Estimado)</h6>
+                      <p class="card-text" id="detailsFinal">1.012 BTC</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="card bg-light mb-3">
+                    <div class="card-body">
+                      <h6 class="card-title">Lucro</h6>
+                      <p
+                        class="card-text text-success"
+                        id="detailsProfitAmount"
+                      >
+                        0.012 BTC ($480)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Fechar
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                id="detailsExecuteBtn"
+              >
+                <i class="fas fa-play me-1"></i> Executar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Script do Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script da página de arbitragem -->
+    <script type="module">
+      import AdminArbitrageController from '../assets/js/controllers/AdminArbitrageController.js';
+      import AuthService from '../assets/js/services/AuthService.js';
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const authService = new AuthService();
+
+        // Verifica autenticação
+        if (!authService.isAuthenticated()) {
+          window.location.href = 'index.html';
+          return;
+        }
+
+        // Inicializa o controlador de arbitragem
+        const arbitrageController = new AdminArbitrageController();
+        arbitrageController.init();
+
+        // Configura o botão de logout
+        const logoutBtn = document.getElementById('adminLogoutBtn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', () => {
+            authService.logout();
+            window.location.href = 'index.html';
+          });
+        }
+
+        // Mostrar nome do usuário atual
+        const usernameSpan = document.getElementById('adminUsername');
+        if (usernameSpan) {
+          usernameSpan.textContent = authService.getCurrentUser() || 'Admin';
+        }
+      });
+    </script>
+  </body>
+</html>
