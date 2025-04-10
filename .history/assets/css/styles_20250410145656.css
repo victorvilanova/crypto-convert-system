@@ -1,0 +1,16 @@
+:root {
+  --primary-color: #2563eb; /* Azul FastCripto */
+  --primary-dark: #1d4ed8;
+  --secondary-color: #0f172a; /* Azul escuro FastCripto */
+  --accent-color: #3b82f6;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --bg-color: #f8fafc;
+  --text-color: #1e293b;
+  --light-gray: #e2e8f0;
+  --border-color: #cbd5e1;
+  --card-bg: #ffffff;
+}
+
+/* Arquivo de estilos principais */
