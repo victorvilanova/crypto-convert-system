@@ -1,0 +1,27 @@
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Configurações do IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/sftp.json
+
+# Arquivos sensíveis
+.env
+.env.local
+*.pem
+*.key
+
+# Logs e temporários
+logs/
+*.log
+npm-debug.log*
+
+# Dependências
+node_modules/
+
+# Arquivos compilados
+dist/
+build/

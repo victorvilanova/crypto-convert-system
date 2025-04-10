@@ -1,0 +1,91 @@
+<script>
+  // Detecção do ambiente FastCripto com base no domínio
+  (function () {
+    let configFile = 'config.prod.js';
+    const hostname = window.location.hostname;
+
+    if (hostname.includes('dev.fastcripto.com')) {
+      configFile = 'config.dev.js';
+      console.log('Ambiente FastCripto: Desenvolvimento');
+    } else if (hostname.includes('teste.fastcripto.com')) {
+      configFile = 'config.teste.js';
+      console.log('Ambiente FastCripto: Testes');
+    } else {
+      console.log('Ambiente FastCripto: Produção');
+    }
+
+    // Inserir a tag de script com o arquivo de configuração apropriado
+    const configScript = document.createElement('script');
+    configScript.src = `assets/js/config/${configFile}`;
+    document.head.appendChild(configScript);
+  })();
+</script>
+
+<header>
+  <div class="container">
+    <div class="header-content">
+      <div class="logo"><span class="logo-icon">₿</span> FastCripto</div>
+      <nav>
+        <ul>
+          <li>
+            <a href="#" class="tab-nav active" data-tab="converter"
+              >Conversor</a
+            >
+          </li>
+          <li>
+            <a href="#" class="tab-nav" data-tab="transactions">Transações</a>
+          </li>
+          <li><a href="#" class="tab-nav" data-tab="rates">Cotações</a></li>
+          <li>
+            <a href="#" class="tab-nav" data-tab="account">Minha Conta</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<!-- ...existing code... -->
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h3 class="footer-heading">FastCripto</h3>
+        <p>Sua plataforma segura para conversão de criptomoedas no Brasil.</p>
+      </div>
+      <div>
+        <h3 class="footer-heading">Links Rápidos</h3>
+        <ul class="footer-links">
+          <li><a href="#">Início</a></li>
+          <li><a href="#">Como Funciona</a></li>
+          <li><a href="#">Taxas e Limites</a></li>
+          <li><a href="#">Suporte</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer-heading">Legal</h3>
+        <ul class="footer-links">
+          <li><a href="termos.html">Termos de Serviço</a></li>
+          <li>
+            <a href="politica-privacidade.html">Política de Privacidade</a>
+          </li>
+          <li><a href="#">Compliance</a></li>
+          <li><a href="#">KYC/AML</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer-heading">Contato</h3>
+        <ul class="footer-links">
+          <li>
+            <a href="mailto:suporte@fastcripto.com">suporte@fastcripto.com</a>
+          </li>
+          <li><a href="tel:+551134567890">+55 (11) 3456-7890</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 FastCripto. Todos os direitos reservados.</p>
+    </div>
+  </div>
+</footer>

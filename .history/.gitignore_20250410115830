@@ -1,0 +1,19 @@
+# Arquivos e pastas do sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de configuração do IDE
+.idea/
+.vscode/
+*.sublime-*
+
+# Dependências
+node_modules/
+
+# Arquivos de ambiente
+.env
+.env.local
+
+# Arquivos de build
+dist/
+build/

@@ -1,0 +1,12 @@
+<script>
+  // Determinar ambiente com base no domínio
+  let configFile = 'config.prod.js';
+  if (window.location.hostname.includes('dev.')) {
+    configFile = 'config.dev.js';
+  } else if (window.location.hostname.includes('teste.')) {
+    configFile = 'config.teste.js';
+  }
+
+  // Carregar arquivo de configuração adequado
+  document.write(`<script src="js/${configFile}"><\/script>`);
+</script>

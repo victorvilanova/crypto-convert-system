@@ -1,0 +1,59 @@
+# Documentação da API FastCripto
+
+Base URL: https://api.fastcripto.com
+
+## Endpoints
+
+### Taxas de Câmbio
+
+#### GET /rates/current
+
+Retorna as taxas atuais de todas as criptomoedas suportadas.
+
+Resposta:
+
+```json
+{
+  "BTC": 254871.35,
+  "ETH": 14875.22,
+  "USDT": 5.04,
+  "BNB": 1543.67,
+  "XRP": 2.67
+}
+```
+
+### Transações
+
+#### POST /transactions
+
+Cria uma nova transação de conversão.
+
+Corpo da requisição:
+
+```json
+{
+  "amount": 5000,
+  "currency": "BTC",
+  "walletAddress": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+  "network": "BTC"
+}
+```
+
+Resposta:
+
+```json
+{
+  "id": "TX12345678",
+  "status": "pending_kyc",
+  "amount": 5000,
+  "convertedAmount": 0.01963,
+  "currency": "BTC",
+  "fees": {
+    "iof": 19,
+    "incomeTax": 750,
+    "service": 500,
+    "network": 25
+  },
+  "created": "2025-04-10T15:30:00Z"
+}
+```
