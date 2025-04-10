@@ -36,32 +36,6 @@ body {
   padding: 0;
   margin: 0;
   overflow-x: hidden; /* Evita rolagem horizontal */
-  background-image: radial-gradient(
-      circle at 100% 0%,
-      rgba(59, 130, 246, 0.03) 0%,
-      transparent 40%
-    ),
-    radial-gradient(
-      circle at 0% 100%,
-      rgba(139, 92, 246, 0.03) 0%,
-      transparent 40%
-    );
-  background-attachment: fixed;
-}
-
-main {
-  position: relative;
-}
-
-main::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 250px;
-  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.05), transparent);
-  z-index: -1;
 }
 
 h1,
@@ -158,62 +132,12 @@ nav ul li a:hover {
   margin: 0 auto;
 }
 
-/* Melhoria no rodapé */
 footer {
-  background: var(--secondary-color);
-  color: white;
-  padding: 3rem 0 1.5rem;
-  position: relative;
-}
-
-footer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: var(--gradient-primary);
-}
-
-.footer-heading {
-  position: relative;
-  display: inline-block;
-  font-size: 1.25rem;
-  margin-bottom: 1.5rem;
-  color: white;
-}
-
-.footer-heading::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  width: 30px;
-  height: 3px;
-  background: var(--primary-color);
-  border-radius: 3px;
-}
-
-.footer-links {
-  list-style: none;
-}
-
-.footer-links li {
-  margin-bottom: 0.75rem;
-}
-
-.footer-links a {
-  color: #cbd5e1;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-}
-
-.footer-links a:hover {
-  color: white;
-  text-decoration: none;
-  transform: translateX(5px);
+  background: #333;
+  color: #fff;
+  padding: 2rem 0;
+  text-align: center;
+  margin-top: 2rem;
 }
 
 footer a {

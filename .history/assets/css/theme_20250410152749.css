@@ -1,0 +1,19 @@
+/* Arquivo de tema para personalização de cores e imagens */
+:root {
+  /* Cores principais */
+  --primary-color: #3b82f6;
+  --primary-dark: #2563eb;
+  --secondary-color: #0f172a;
+  --accent-color: #8b5cf6;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --bg-color: #f8fafc;
+  --text-color: #1e293b;
+  --light-gray: #e2e8f0;
+  --border-color: #cbd5e1;
+
+  /* Imagens */
+  --header-bg-image: url('assets/images/header-bg.jpg');
+  --footer-bg-image: url('assets/images/footer-bg.jpg');
+}

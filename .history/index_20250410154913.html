@@ -306,6 +306,53 @@
       </div>
     </main>
 
+    <footer>
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            <h3 class="footer-heading">FastCripto</h3>
+            <p>
+              Sua plataforma segura para conversão de criptomoedas no Brasil.
+            </p>
+          </div>
+          <div>
+            <h3 class="footer-heading">Links Rápidos</h3>
+            <ul class="footer-links">
+              <li><a href="#">Início</a></li>
+              <li><a href="#">Como Funciona</a></li>
+              <li><a href="#">Taxas e Limites</a></li>
+              <li><a href="#">Suporte</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="footer-heading">Legal</h3>
+            <ul class="footer-links">
+              <li><a href="termos.html">Termos de Serviço</a></li>
+              <li>
+                <a href="politica-privacidade.html">Política de Privacidade</a>
+              </li>
+              <li><a href="#">Compliance</a></li>
+              <li><a href="#">KYC/AML</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="footer-heading">Contato</h3>
+            <ul class="footer-links">
+              <li>
+                <a href="mailto:suporte@fastcripto.com"
+                  >suporte@fastcripto.com</a
+                >
+              </li>
+              <li><a href="tel:+551134567890">+55 (11) 3456-7890</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 FastCripto. Todos os direitos reservados.</p>
+        </div>
+      </div>
+    </footer>
+
     <!-- Container para notificações in-app -->
     <div id="notifications-container"></div>
 
@@ -318,17 +365,6 @@
           document.getElementById('menu-container').innerHTML = html;
         })
         .catch((error) => console.error('Erro ao carregar o menu:', error));
-    </script>
-
-    <div id="footer-container"></div>
-    <script>
-      // Carregar o footer dinamicamente
-      fetch('footer.html')
-        .then((response) => response.text())
-        .then((html) => {
-          document.getElementById('footer-container').innerHTML = html;
-        })
-        .catch((error) => console.error('Erro ao carregar o footer:', error));
     </script>
 
     <!-- Scripts -->
