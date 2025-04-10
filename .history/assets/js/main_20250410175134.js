@@ -341,7 +341,8 @@ function handleCalculateConversion() {
       networkFee + ' ' + selectedCrypto;
     document.getElementById('result-net-amount').textContent =
       formatCurrency(netAmount);
-    document.getElementById('result-rate').textContent = formatCurrency(rate);
+    document.getElementById('result-rate').textContent =
+      formatCurrency(rate);
     document.getElementById('result-crypto-amount').textContent =
       finalCryptoAmount.toFixed(8) + ' ' + selectedCrypto;
   }

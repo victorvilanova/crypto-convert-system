@@ -82,26 +82,19 @@ export async function sendKycNotification(status, message) {
   try {
     // Mostrar notificação in-app
     if (notificationSettings.inApp.kycUpdates) {
-      const type =
-        status === 'approved'
-          ? 'success'
-          : status === 'rejected'
-          ? 'error'
-          : status === 'pending'
-          ? 'warning'
-          : 'info';
-
+      const type = status === 'approved' ? 'success' : 
+                  status === 'rejected' ? 'error' : 
+                  status === 'pending' ? 'warning' : 'info';
+      
       showInAppNotification(message, type);
     }
-
+    
     // Simular envio de email em ambientes não-produção
     if (CONFIG.environment !== 'production') {
-      console.log(
-        `FastCripto: Simulando envio de email - KYC ${status}: ${message}`
-      );
+      console.log(`FastCripto: Simulando envio de email - KYC ${status}: ${message}`);
       return true;
     }
-
+    
     // Em produção, enviar email através do backend
     if (notificationSettings.email.kycStatusUpdates) {
       const response = await fetch(`${CONFIG.apiEndpoints.notifications}`, {
@@ -115,14 +108,14 @@ export async function sendKycNotification(status, message) {
           userEmail: 'usuario@teste.com', // Em produção, viria do usuário logado
           data: {
             message: message,
-            timestamp: new Date().toISOString(),
+            timestamp: new Date().toISOString()
           },
         }),
       });
-
+      
       return response.ok;
     }
-
+    
     return true;
   } catch (error) {
     console.error('FastCripto: Erro ao enviar notificação de KYC:', error);
@@ -224,12 +217,12 @@ function setupNotificationListeners() {
       );
     }
   });
-
+  
   // Ouvir eventos de status de KYC
   document.addEventListener('kycStatusChanged', (event) => {
     const { status, message } = event.detail;
     sendKycNotification(status, message);
-
+    
     // Atualizar a interface com base no status do KYC
     if (status === 'approved') {
       updateKycStatus('approved');
@@ -248,7 +241,7 @@ function updateKycStatus(status) {
   if (kycStatusElement) {
     kycStatusElement.className = ''; // Remover classes existentes
     kycStatusElement.classList.add('badge');
-
+    
     if (status === 'approved') {
       kycStatusElement.classList.add('badge-success');
       kycStatusElement.textContent = 'Verificado';
@@ -269,20 +262,17 @@ function updateKycStatus(status) {
 function processTransactionsAfterKyc() {
   const transactions = getTransactionsFromStorage();
   let updated = false;
-
-  transactions.forEach((t) => {
+  
+  transactions.forEach(t => {
     if (t.status === 'pending_kyc') {
       t.status = 'processing';
       updated = true;
     }
   });
-
+  
   if (updated) {
-    localStorage.setItem(
-      'fastcripto_transactions',
-      JSON.stringify(transactions)
-    );
-
+    localStorage.setItem('fastcripto_transactions', JSON.stringify(transactions));
+    
     // Tentar carregar a função do módulo principal
     if (typeof window.loadUserTransactions === 'function') {
       window.loadUserTransactions();

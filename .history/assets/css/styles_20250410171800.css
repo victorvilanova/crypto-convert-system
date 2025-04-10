@@ -579,52 +579,6 @@ small {
   margin-right: 0.25rem;
 }
 
-/* Ícones de redes */
-.network-option {
-  // ...existing code...
-}
-
-.network-icon {
-  // ...existing code...
-}
-
-.icon-btc,
-.icon-eth,
-.icon-bsc,
-.icon-tron {
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.icon-btc {
-  background-image: url('/assets/images/bitcoin-icon.svg');
-}
-
-.icon-eth {
-  background-image: url('/assets/images/ethereum-icon.svg');
-}
-
-.icon-bsc {
-  background-image: url('/assets/images/bsc-icon.svg');
-}
-
-.icon-tron {
-  background-image: url('/assets/images/tron-icon.svg');
-  /* Fallback para quando a imagem não estiver disponível */
-  background-color: #ff060a;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 12px;
-}
-
-.icon-tron::before {
-  content: 'TRON';
-}
-
 /* Melhorar a aparência do resultado de conversão */
 .conversion-result {
   background-color: #f8fafc;

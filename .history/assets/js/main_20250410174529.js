@@ -280,6 +280,7 @@ function handleCalculateConversion() {
   const selectedNetwork = selectedNetworkElement.value;
 
   // Obter cotação da criptomoeda
+  // Usando a função do módulo rates para garantir que obtemos valores atualizados
   const rate = getRateForCurrency(selectedCrypto);
   if (!rate) {
     showAlert(`Cotação para ${selectedCrypto} não disponível`, 'error');
@@ -288,33 +289,21 @@ function handleCalculateConversion() {
 
   // Calcular taxas
   const iofRate = CONFIG.iofRate;
-  const serviceRate = CONFIG.serviceRate; // Taxa de serviço 6%
+  const incomeTaxRate = CONFIG.incomeTaxRate;
+  const serviceRate = CONFIG.serviceRate;
 
   const iofAmount = brlAmount * iofRate;
+  const incomeTaxAmount = brlAmount * incomeTaxRate;
   const serviceAmount = brlAmount * serviceRate;
 
-  // Calcular valor líquido (sem IR)
-  const netAmount = brlAmount - iofAmount - serviceAmount;
+  // Calcular valor líquido
+  const netAmount = brlAmount - iofAmount - incomeTaxAmount - serviceAmount;
 
   // Calcular valor em cripto
   const cryptoAmount = netAmount / rate;
 
   // Aplicar taxa de rede (em cripto)
-  let networkFee = 0;
-
-  // Determinar a taxa de rede correta com base na criptomoeda e rede selecionada
-  if (selectedCrypto === 'USDT') {
-    // USDT tem taxas diferentes por rede
-    if (typeof CONFIG.networkFees.USDT === 'object') {
-      networkFee = CONFIG.networkFees.USDT[selectedNetwork] || 0;
-    } else {
-      networkFee = CONFIG.networkFees.USDT || 0;
-    }
-  } else {
-    // BTC e ETH têm taxa fixa
-    networkFee = CONFIG.networkFees[selectedCrypto] || 0;
-  }
-
+  const networkFee = CONFIG.networkFees[selectedCrypto] || 0;
   const finalCryptoAmount = cryptoAmount - networkFee;
 
   if (finalCryptoAmount <= 0) {
@@ -331,17 +320,32 @@ function handleCalculateConversion() {
     resultElement.style.display = 'block';
 
     // Preencher detalhes
-    document.getElementById('result-brl-amount').textContent =
-      formatCurrency(brlAmount);
-    document.getElementById('result-iof').textContent =
-      formatCurrency(iofAmount);
-    document.getElementById('result-service-fee').textContent =
-      formatCurrency(serviceAmount);
+    document.getElementById('result-brl-amount').textContent = formatCurrency(
+      brlAmount,
+      'BRL'
+    );
+    document.getElementById('result-iof').textContent = formatCurrency(
+      iofAmount,
+      'BRL'
+    );
+    document.getElementById('result-income-tax').textContent = formatCurrency(
+      incomeTaxAmount,
+      'BRL'
+    );
+    document.getElementById('result-service-fee').textContent = formatCurrency(
+      serviceAmount,
+      'BRL'
+    );
+    document.getElementById('result-net-amount').textContent = formatCurrency(
+      netAmount,
+      'BRL'
+    );
+    document.getElementById('result-rate').textContent = formatCurrency(
+      rate,
+      'BRL'
+    );
     document.getElementById('result-network-fee').textContent =
       networkFee + ' ' + selectedCrypto;
-    document.getElementById('result-net-amount').textContent =
-      formatCurrency(netAmount);
-    document.getElementById('result-rate').textContent = formatCurrency(rate);
     document.getElementById('result-crypto-amount').textContent =
       finalCryptoAmount.toFixed(8) + ' ' + selectedCrypto;
   }
@@ -351,16 +355,15 @@ function handleCalculateConversion() {
 
   // Habilitar o botão para prosseguir
   const proceedButton = document.getElementById('btn-proceed');
-  const proceedContainer = document.getElementById('btn-proceed-container');
-  if (proceedButton && proceedContainer) {
+  if (proceedButton) {
     proceedButton.disabled = false;
-    proceedContainer.classList.remove('hidden');
   }
 
   // Armazenar a conversão atual para uso na confirmação
   currentConversion = {
     brlAmount,
     iofAmount,
+    incomeTaxAmount,
     serviceAmount,
     netAmount,
     cryptoAmount,
@@ -368,7 +371,6 @@ function handleCalculateConversion() {
     rate,
     currency: selectedCrypto,
     network: selectedNetwork,
-    networkFee,
     walletAddress: document.getElementById('wallet-address').value.trim(),
   };
 
@@ -861,19 +863,13 @@ function validateWalletAddress() {
           'Endereço de USDT na rede Ethereum inválido'
         );
         return false;
-      } else if (
-        network === 'BSC' &&
-        !/^0x[a-fA-F0-9]{40}$/.test(walletValue)
-      ) {
+      } else if (network === 'BSC' && !/^0x[a-fA-F0-9]{40}$/.test(walletValue)) {
         showValidationError(
           walletInput,
           'Endereço de USDT na rede BSC inválido'
         );
         return false;
-      } else if (
-        network === 'TRON' &&
-        !/^T[A-Za-z1-9]{33}$/.test(walletValue)
-      ) {
+      } else if (network === 'TRON' && !/^T[A-Za-z1-9]{33}$/.test(walletValue)) {
         showValidationError(
           walletInput,
           'Endereço de USDT na rede TRON inválido (deve começar com T e ter 34 caracteres)'

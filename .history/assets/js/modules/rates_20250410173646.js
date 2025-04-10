@@ -43,112 +43,58 @@ export async function initializeRatesModule() {
 // Buscar cotações atualizadas da API
 export async function fetchCurrentRates() {
   try {
-    // Ativar indicador de carregamento
-    const loader = document.getElementById('rates-loader');
-    if (loader) loader.classList.add('active');
+    showLoadingState(true);
 
-    // Verificar se devemos usar dados simulados ou reais
-    let rates;
+    // Em ambiente de produção, chamar a API real
+    if (CONFIG.environment === 'production') {
+      const response = await fetch(CONFIG.apiEndpoints.rates);
+      if (!response.ok) throw new Error('Falha na resposta da API');
 
-    if (CONFIG.environment === 'development' && CONFIG.useMockRates) {
-      // Dados simulados para desenvolvimento
-      rates = await getMockRates();
+      const data = await response.json();
+
+      // Mapear os dados da resposta para o formato esperado
+      // A API do CoinGecko retorna no formato: { bitcoin: { brl: 254871.35 }, ... }
+      currentRates = {
+        BTC: data.bitcoin?.brl || currentRates.BTC,
+        ETH: data.ethereum?.brl || currentRates.ETH,
+        USDT: data.tether?.brl || currentRates.USDT,
+      };
     } else {
-      // Dados reais da API
-      rates = await getRealRates();
+      // Para desenvolvimento, simular variação aleatória de até 1%
+      Object.keys(currentRates).forEach((crypto) => {
+        const variation = (Math.random() * 2 - 1) * 0.01;
+        currentRates[crypto] = currentRates[crypto] * (1 + variation);
+      });
+
+      // Simular atraso de rede em ambiente de desenvolvimento
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
-    // Armazenar taxas e atualizar hora
-    currentRates = rates;
+    // Atualizar timestamp
     lastUpdateTimestamp = new Date();
 
-    // Atualizar interface
-    updateRatesDisplay(rates);
+    // Atualizar a interface
+    updateRatesDisplay(currentRates);
 
-    // Desativar indicador de carregamento
-    if (loader) loader.classList.remove('active');
+    // Atualizar a referência global
+    window.cryptoRates = currentRates;
 
-    if (CONFIG.debugMode) {
-      console.log('FastCripto: Taxas atualizadas', rates);
-    }
-
-    return rates;
+    showLoadingState(false);
+    return currentRates;
   } catch (error) {
-    console.error('Erro ao obter cotações:', error);
+    console.error('Erro ao buscar cotações:', error);
+    showLoadingState(false);
 
-    const loader = document.getElementById('rates-loader');
-    if (loader) loader.classList.remove('active');
-
-    // Exibir alerta para o usuário
-    if (window.showInAppNotification) {
-      window.showInAppNotification(
-        'Erro ao obter taxas de conversão. Por favor, tente novamente.',
+    // Mostrar mensagem de erro se a notificação estiver disponível
+    if (typeof showInAppNotification === 'function') {
+      showInAppNotification(
+        'Erro ao atualizar cotações. Usando valores de fallback.',
         'error'
       );
     }
 
-    // Utilizar taxas em cache se disponíveis
-    if (Object.keys(currentRates).length > 0) {
-      console.warn('Usando taxas em cache devido a erro na API.');
-      return currentRates;
-    }
-
-    // Caso contrário, retornar taxas padrão
-    console.warn('Usando taxas padrão como fallback.');
-    return getDefaultRates();
-  }
-}
-
-// Obter taxas simuladas para ambiente de desenvolvimento
-async function getMockRates() {
-  // Simular um atraso de rede
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  // Retornar valores simulados
-  return {
-    BTC: 254871.35,
-    ETH: 14875.22,
-    USDT: 5.04,
-  };
-}
-
-// Obter taxas reais da API
-async function getRealRates() {
-  try {
-    const response = await fetch(CONFIG.apiEndpoints.rates);
-
-    if (!response.ok) {
-      throw new Error(`API respondeu com status ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Mapear resposta da API para o formato esperado pelo sistema
-    // Corrigindo o problema de mapeamento - A API CoinGecko retorna dados em formato diferente
-    const mappedRates = {
-      BTC: data.bitcoin?.brl || CONFIG.initialRates.BTC,
-      ETH: data.ethereum?.brl || CONFIG.initialRates.ETH,
-      USDT: data.tether?.brl || CONFIG.initialRates.USDT,
-    };
-
-    // Validar que as taxas são números válidos
-    Object.keys(mappedRates).forEach((key) => {
-      if (isNaN(mappedRates[key]) || mappedRates[key] <= 0) {
-        console.warn(`Taxa inválida para ${key}, usando valor padrão`);
-        mappedRates[key] = CONFIG.initialRates[key];
-      }
-    });
-
-    return mappedRates;
-  } catch (error) {
-    console.error('Erro ao obter taxas da API:', error);
     throw error;
   }
-}
-
-// Obter taxas padrão (fallback em caso de erro)
-function getDefaultRates() {
-  return { ...CONFIG.initialRates };
 }
 
 // Atualizar a interface com as cotações
@@ -202,11 +148,7 @@ function showLoadingState(isLoading) {
 
 // Obter cotação para uma moeda específica
 export function getRateForCurrency(currency) {
-  if (!currency || !currentRates[currency]) {
-    console.warn(`FastCripto: Taxa não encontrada para ${currency}`);
-    return CONFIG.initialRates[currency] || null;
-  }
-  return currentRates[currency];
+  return currentRates[currency] || null;
 }
 
 // Funções utilitárias

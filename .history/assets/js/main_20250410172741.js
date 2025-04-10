@@ -3,44 +3,33 @@
  * Inicializa a aplicação e integra todos os módulos
  */
 
-// Importar configurações e módulos
+// Importar configurações
 import { CONFIG } from './config.js';
-import { initializeModules, showInAppNotification } from './modules/index.js';
 
 // Variáveis globais
+let currentRates = {};
 let currentConversion = null;
 
 // Uma única inicialização quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', async function () {
+document.addEventListener('DOMContentLoaded', function () {
   console.log(
     `Inicializando FastCripto - ${CONFIG.appName} v${CONFIG.version}`
   );
   console.log(`Ambiente: ${CONFIG.environment}`);
 
-  try {
-    // Inicializar todos os módulos
-    await initializeModules();
+  // Inicializar todos os módulos
+  setupTabNavigation();
+  initializeRatesDisplay();
+  setupConversionCalculator();
+  setupEventListeners();
+  setupTransactionHandling();
 
-    // Inicializar interface e eventos
-    setupTabNavigation();
-    setupConversionCalculator();
-    setupEventListeners();
-    setupTransactionHandling();
-
-    // Verificação de autenticação
-    if (isUserAuthenticated()) {
-      loadUserTransactions();
-    }
-
-    console.log('FastCripto inicializada com sucesso!');
-    showInAppNotification('FastCripto inicializada com sucesso!', 'success');
-  } catch (error) {
-    console.error('Erro ao inicializar a aplicação:', error);
-    showAlert(
-      'Ocorreu um erro ao inicializar a aplicação. Por favor, recarregue a página.',
-      'error'
-    );
+  // Verificação de autenticação
+  if (isUserAuthenticated()) {
+    loadUserTransactions();
   }
+
+  console.log('FastCripto inicializada com sucesso!');
 });
 
 // Configurar navegação por abas
@@ -280,7 +269,7 @@ function handleCalculateConversion() {
   const selectedNetwork = selectedNetworkElement.value;
 
   // Obter cotação da criptomoeda
-  const rate = getRateForCurrency(selectedCrypto);
+  const rate = currentRates[selectedCrypto];
   if (!rate) {
     showAlert(`Cotação para ${selectedCrypto} não disponível`, 'error');
     return;
@@ -288,87 +277,70 @@ function handleCalculateConversion() {
 
   // Calcular taxas
   const iofRate = CONFIG.iofRate;
-  const serviceRate = CONFIG.serviceRate; // Taxa de serviço 6%
+  const incomeTaxRate = CONFIG.incomeTaxRate;
+  const serviceRate = CONFIG.serviceRate;
 
   const iofAmount = brlAmount * iofRate;
+  const incomeTaxAmount = brlAmount * incomeTaxRate;
   const serviceAmount = brlAmount * serviceRate;
 
-  // Calcular valor líquido (sem IR)
-  const netAmount = brlAmount - iofAmount - serviceAmount;
+  // Calcular valor líquido
+  const netAmount = brlAmount - iofAmount - incomeTaxAmount - serviceAmount;
 
-  // Calcular valor em cripto
+  // Taxas de rede
+  const networkFee = CONFIG.networkFees[selectedCrypto] || 0;
+  const networkFeeBRL = networkFee * rate;
+
+  // Calcular valor final em cripto
   const cryptoAmount = netAmount / rate;
+  const finalCryptoAmount = cryptoAmount - networkFee / rate;
 
-  // Aplicar taxa de rede (em cripto)
-  let networkFee = 0;
-
-  // Determinar a taxa de rede correta com base na criptomoeda e rede selecionada
-  if (selectedCrypto === 'USDT') {
-    // USDT tem taxas diferentes por rede
-    if (typeof CONFIG.networkFees.USDT === 'object') {
-      networkFee = CONFIG.networkFees.USDT[selectedNetwork] || 0;
-    } else {
-      networkFee = CONFIG.networkFees.USDT || 0;
-    }
-  } else {
-    // BTC e ETH têm taxa fixa
-    networkFee = CONFIG.networkFees[selectedCrypto] || 0;
-  }
-
-  const finalCryptoAmount = cryptoAmount - networkFee;
-
-  if (finalCryptoAmount <= 0) {
-    showAlert(
-      'Valor muito baixo para cobrir as taxas. Aumente o valor da transação.',
-      'error'
-    );
+  // Atualizar interface com o resultado
+  const resultElement = document.getElementById('conversion-result');
+  if (!resultElement) {
+    console.error('Elemento de resultado não encontrado');
     return;
   }
 
-  // Mostrar resultado
-  const resultElement = document.getElementById('conversion-result');
-  if (resultElement) {
-    resultElement.style.display = 'block';
+  document.getElementById('result-brl-amount').textContent =
+    formatCurrency(brlAmount);
+  document.getElementById('result-iof').textContent = `- ${formatCurrency(
+    iofAmount
+  )}`;
+  document.getElementById('result-ir').textContent = `- ${formatCurrency(
+    incomeTaxAmount
+  )}`;
+  document.getElementById(
+    'result-service-fee'
+  ).textContent = `- ${formatCurrency(serviceAmount)}`;
+  document.getElementById(
+    'result-network-fee'
+  ).textContent = `- ${formatCurrency(networkFeeBRL)}`;
+  document.getElementById('result-net-amount').textContent =
+    formatCurrency(netAmount);
+  document.getElementById(
+    'result-crypto-amount'
+  ).textContent = `${finalCryptoAmount.toFixed(8)} ${selectedCrypto}`;
+  document.getElementById('result-rate').textContent = formatCurrency(rate);
 
-    // Preencher detalhes
-    document.getElementById('result-brl-amount').textContent =
-      formatCurrency(brlAmount);
-    document.getElementById('result-iof').textContent =
-      formatCurrency(iofAmount);
-    document.getElementById('result-service-fee').textContent =
-      formatCurrency(serviceAmount);
-    document.getElementById('result-network-fee').textContent =
-      networkFee + ' ' + selectedCrypto;
-    document.getElementById('result-net-amount').textContent =
-      formatCurrency(netAmount);
-    document.getElementById('result-rate').textContent = formatCurrency(rate);
-    document.getElementById('result-crypto-amount').textContent =
-      finalCryptoAmount.toFixed(8) + ' ' + selectedCrypto;
-  }
-
-  // Rolar para o resultado
-  resultElement.scrollIntoView({ behavior: 'smooth' });
-
-  // Habilitar o botão para prosseguir
+  // Mostrar o resultado e o botão de prosseguir
+  resultElement.classList.remove('hidden');
   const proceedButton = document.getElementById('btn-proceed');
-  const proceedContainer = document.getElementById('btn-proceed-container');
-  if (proceedButton && proceedContainer) {
-    proceedButton.disabled = false;
-    proceedContainer.classList.remove('hidden');
-  }
+  if (proceedButton) proceedButton.classList.remove('hidden');
 
-  // Armazenar a conversão atual para uso na confirmação
+  // Armazenar dados da conversão para uso posterior
   currentConversion = {
     brlAmount,
     iofAmount,
+    incomeTaxAmount,
     serviceAmount,
+    networkFeeBRL,
     netAmount,
     cryptoAmount,
     finalCryptoAmount,
     rate,
     currency: selectedCrypto,
     network: selectedNetwork,
-    networkFee,
     walletAddress: document.getElementById('wallet-address').value.trim(),
   };
 
@@ -454,7 +426,7 @@ function setupTransactionHandling() {
   loadUserTransactions();
 }
 
-// Função para atualizar as redes disponíveis com base na criptomoeda selecionada
+// Atualizar redes disponíveis com base na criptomoeda selecionada
 function updateAvailableNetworks() {
   // Obter criptomoeda selecionada
   const selectedCrypto =
@@ -468,22 +440,13 @@ function updateAvailableNetworks() {
     document.querySelector('.network-eth')?.parentElement;
   const bscNetworkOption =
     document.querySelector('.network-bsc')?.parentElement;
-  const tronNetworkOption =
-    document.querySelector('.network-tron')?.parentElement;
 
-  if (
-    !btcNetworkOption ||
-    !ethNetworkOption ||
-    !bscNetworkOption ||
-    !tronNetworkOption
-  )
-    return;
+  if (!btcNetworkOption || !ethNetworkOption || !bscNetworkOption) return;
 
   // Resetar todas as opções
   btcNetworkOption.style.display = 'none';
   ethNetworkOption.style.display = 'none';
   bscNetworkOption.style.display = 'none';
-  tronNetworkOption.style.display = 'none';
 
   // Mostrar apenas as redes compatíveis com a criptomoeda
   switch (selectedCrypto) {
@@ -498,15 +461,13 @@ function updateAvailableNetworks() {
     case 'USDT':
       ethNetworkOption.style.display = 'flex';
       bscNetworkOption.style.display = 'flex';
-      tronNetworkOption.style.display = 'flex';
-      document.querySelector('.network-tron').checked = true; // Definir TRON como padrão para USDT
+      document.querySelector('.network-eth').checked = true;
       break;
     default:
       // Mostrar todas as redes para outras criptomoedas
       btcNetworkOption.style.display = 'flex';
       ethNetworkOption.style.display = 'flex';
       bscNetworkOption.style.display = 'flex';
-      tronNetworkOption.style.display = 'flex';
   }
 }
 
@@ -643,166 +604,7 @@ function truncateWalletAddress(address, startChars = 8, endChars = 8) {
 
 // Iniciar processo de KYC
 function handleStartKYC() {
-  // Criar o modal de KYC
-  const modal = document.createElement('div');
-  modal.className = 'kyc-modal';
-  modal.innerHTML = `
-    <div class="kyc-modal-content">
-      <div class="kyc-modal-header">
-        <h2>Verificação de Identidade (KYC)</h2>
-        <button class="kyc-modal-close">&times;</button>
-      </div>
-      <div class="kyc-modal-body">
-        <p>Para completar suas transações, precisamos verificar sua identidade conforme exigido pelas regulamentações brasileiras.</p>
-        
-        <form id="kyc-form">
-          <div class="form-group">
-            <label for="kyc-name">Nome Completo</label>
-            <input type="text" id="kyc-name" required>
-          </div>
-          
-          <div class="form-group">
-            <label for="kyc-cpf">CPF</label>
-            <input type="text" id="kyc-cpf" placeholder="000.000.000-00" required>
-          </div>
-          
-          <div class="form-group">
-            <label for="kyc-birthdate">Data de Nascimento</label>
-            <input type="date" id="kyc-birthdate" required>
-          </div>
-          
-          <div class="form-group">
-            <label for="kyc-phone">Telefone</label>
-            <input type="text" id="kyc-phone" placeholder="(00) 00000-0000" required>
-          </div>
-          
-          <div class="form-group">
-            <label>Documentos (em implementação)</label>
-            <div class="kyc-docs">
-              <div class="kyc-doc-upload">
-                <span>RG/CNH (frente)</span>
-                <button type="button" class="btn small" disabled>Upload</button>
-              </div>
-              <div class="kyc-doc-upload">
-                <span>RG/CNH (verso)</span>
-                <button type="button" class="btn small" disabled>Upload</button>
-              </div>
-              <div class="kyc-doc-upload">
-                <span>Selfie com documento</span>
-                <button type="button" class="btn small" disabled>Upload</button>
-              </div>
-            </div>
-          </div>
-          
-          <div class="form-actions">
-            <button type="submit" class="btn primary">Enviar para Verificação</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  // Configurar eventos
-  const closeButton = modal.querySelector('.kyc-modal-close');
-  closeButton.addEventListener('click', function () {
-    document.body.removeChild(modal);
-  });
-
-  const kycForm = modal.querySelector('#kyc-form');
-  kycForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    // Simular envio
-    const submitButton = kycForm.querySelector('button[type="submit"]');
-    submitButton.textContent = 'Enviando...';
-    submitButton.disabled = true;
-
-    setTimeout(() => {
-      // Atualizar transações pendentes
-      const transactions = getTransactionsFromStorage();
-      let updated = false;
-
-      transactions.forEach((t) => {
-        if (t.status === 'pending_kyc') {
-          t.status = 'processing';
-          t.kycSubmitted = true;
-          updated = true;
-        }
-      });
-
-      if (updated) {
-        localStorage.setItem(
-          'fastcripto_transactions',
-          JSON.stringify(transactions)
-        );
-        loadUserTransactions();
-      }
-
-      // Fechar modal
-      document.body.removeChild(modal);
-
-      // Mostrar mensagem de sucesso
-      showAlert(
-        'Verificação enviada com sucesso! Suas transações serão processadas em breve.',
-        'success'
-      );
-
-      // Navegar para a página de transações
-      const transactionsTab = document.querySelector(
-        '.tab-nav[data-tab="transactions"]'
-      );
-      if (transactionsTab) transactionsTab.click();
-    }, 2000);
-  });
-
-  // Máscara para CPF
-  const cpfInput = document.getElementById('kyc-cpf');
-  if (cpfInput) {
-    cpfInput.addEventListener('input', function (e) {
-      let value = e.target.value.replace(/\D/g, '');
-
-      if (value.length > 11) {
-        value = value.substring(0, 11);
-      }
-
-      if (value.length > 9) {
-        e.target.value = value.replace(
-          /(\d{3})(\d{3})(\d{3})(\d{1,2})/,
-          '$1.$2.$3-$4'
-        );
-      } else if (value.length > 6) {
-        e.target.value = value.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
-      } else if (value.length > 3) {
-        e.target.value = value.replace(/(\d{3})(\d{1,3})/, '$1.$2');
-      } else {
-        e.target.value = value;
-      }
-    });
-  }
-
-  // Máscara para telefone
-  const phoneInput = document.getElementById('kyc-phone');
-  if (phoneInput) {
-    phoneInput.addEventListener('input', function (e) {
-      let value = e.target.value.replace(/\D/g, '');
-
-      if (value.length > 11) {
-        value = value.substring(0, 11);
-      }
-
-      if (value.length > 10) {
-        e.target.value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-      } else if (value.length > 6) {
-        e.target.value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-      } else if (value.length > 2) {
-        e.target.value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
-      } else {
-        e.target.value = value;
-      }
-    });
-  }
+  showAlert('O processo de KYC será implementado em breve!', 'info');
 }
 
 // Validar endereço da carteira
@@ -848,37 +650,25 @@ function validateWalletAddress() {
       const selectedNetwork = document.querySelector(
         'input[name="network"]:checked'
       );
-      if (!selectedNetwork) {
-        showValidationError(walletInput, 'Selecione uma rede blockchain');
-        return false;
-      }
+      if (selectedNetwork) {
+        const network = selectedNetwork.value;
 
-      const network = selectedNetwork.value;
-
-      if (network === 'ETH' && !/^0x[a-fA-F0-9]{40}$/.test(walletValue)) {
-        showValidationError(
-          walletInput,
-          'Endereço de USDT na rede Ethereum inválido'
-        );
-        return false;
-      } else if (
-        network === 'BSC' &&
-        !/^0x[a-fA-F0-9]{40}$/.test(walletValue)
-      ) {
-        showValidationError(
-          walletInput,
-          'Endereço de USDT na rede BSC inválido'
-        );
-        return false;
-      } else if (
-        network === 'TRON' &&
-        !/^T[A-Za-z1-9]{33}$/.test(walletValue)
-      ) {
-        showValidationError(
-          walletInput,
-          'Endereço de USDT na rede TRON inválido (deve começar com T e ter 34 caracteres)'
-        );
-        return false;
+        if (network === 'ETH' && !/^0x[a-fA-F0-9]{40}$/.test(walletValue)) {
+          showValidationError(
+            walletInput,
+            'Endereço de USDT na rede Ethereum inválido'
+          );
+          return false;
+        } else if (
+          network === 'BSC' &&
+          !/^0x[a-fA-F0-9]{40}$/.test(walletValue)
+        ) {
+          showValidationError(
+            walletInput,
+            'Endereço de USDT na rede BSC inválido'
+          );
+          return false;
+        }
       }
       break;
 
@@ -938,36 +728,4 @@ function addTransactionToHistory(transaction) {
 
   // Atualizar interface
   loadUserTransactions();
-}
-
-// Funções utilitárias de formatação
-
-// Formatação de moeda (BRL)
-function formatCurrency(value) {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-}
-
-// Formatação de data e hora
-function formatDateTime(date) {
-  if (!(date instanceof Date)) {
-    date = new Date(date);
-  }
-
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-}
-
-// Verificar se o usuário está autenticado (placeholder para futura implementação)
-function isUserAuthenticated() {
-  // Esta é uma implementação simplificada
-  // Em uma aplicação real, verificaria tokens JWT, cookies, etc.
-  return true;
 }

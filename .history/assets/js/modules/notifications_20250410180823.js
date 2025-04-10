@@ -34,7 +34,6 @@ function loadNotificationSettings() {
       transactionUpdates: true,
       rateAlerts: true,
       securityAlerts: true,
-      kycUpdates: true,
     },
   };
 }
@@ -73,59 +72,6 @@ async function sendTransactionNotification(transaction, type) {
     return response.ok;
   } catch (error) {
     console.error('FastCripto: Erro ao enviar notificação:', error);
-    return false;
-  }
-}
-
-// Envia uma notificação específica sobre o processo de KYC
-export async function sendKycNotification(status, message) {
-  try {
-    // Mostrar notificação in-app
-    if (notificationSettings.inApp.kycUpdates) {
-      const type =
-        status === 'approved'
-          ? 'success'
-          : status === 'rejected'
-          ? 'error'
-          : status === 'pending'
-          ? 'warning'
-          : 'info';
-
-      showInAppNotification(message, type);
-    }
-
-    // Simular envio de email em ambientes não-produção
-    if (CONFIG.environment !== 'production') {
-      console.log(
-        `FastCripto: Simulando envio de email - KYC ${status}: ${message}`
-      );
-      return true;
-    }
-
-    // Em produção, enviar email através do backend
-    if (notificationSettings.email.kycStatusUpdates) {
-      const response = await fetch(`${CONFIG.apiEndpoints.notifications}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'kyc',
-          subType: status,
-          userEmail: 'usuario@teste.com', // Em produção, viria do usuário logado
-          data: {
-            message: message,
-            timestamp: new Date().toISOString(),
-          },
-        }),
-      });
-
-      return response.ok;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('FastCripto: Erro ao enviar notificação de KYC:', error);
     return false;
   }
 }
@@ -224,81 +170,10 @@ function setupNotificationListeners() {
       );
     }
   });
-
-  // Ouvir eventos de status de KYC
-  document.addEventListener('kycStatusChanged', (event) => {
-    const { status, message } = event.detail;
-    sendKycNotification(status, message);
-
-    // Atualizar a interface com base no status do KYC
-    if (status === 'approved') {
-      updateKycStatus('approved');
-      processTransactionsAfterKyc();
-    } else if (status === 'rejected') {
-      updateKycStatus('rejected');
-    } else if (status === 'pending') {
-      updateKycStatus('pending');
-    }
-  });
-}
-
-// Atualiza o status de KYC na interface
-function updateKycStatus(status) {
-  const kycStatusElement = document.querySelector('.profile-value .badge');
-  if (kycStatusElement) {
-    kycStatusElement.className = ''; // Remover classes existentes
-    kycStatusElement.classList.add('badge');
-
-    if (status === 'approved') {
-      kycStatusElement.classList.add('badge-success');
-      kycStatusElement.textContent = 'Verificado';
-    } else if (status === 'rejected') {
-      kycStatusElement.classList.add('badge-error');
-      kycStatusElement.textContent = 'Rejeitado';
-    } else if (status === 'pending') {
-      kycStatusElement.classList.add('badge-warning');
-      kycStatusElement.textContent = 'Pendente';
-    } else {
-      kycStatusElement.classList.add('badge-info');
-      kycStatusElement.textContent = 'Não Verificado';
-    }
-  }
-}
-
-// Processa as transações após KYC aprovado
-function processTransactionsAfterKyc() {
-  const transactions = getTransactionsFromStorage();
-  let updated = false;
-
-  transactions.forEach((t) => {
-    if (t.status === 'pending_kyc') {
-      t.status = 'processing';
-      updated = true;
-    }
-  });
-
-  if (updated) {
-    localStorage.setItem(
-      'fastcripto_transactions',
-      JSON.stringify(transactions)
-    );
-
-    // Tentar carregar a função do módulo principal
-    if (typeof window.loadUserTransactions === 'function') {
-      window.loadUserTransactions();
-    }
-  }
-}
-
-// Função auxiliar para obter transações do localStorage
-function getTransactionsFromStorage() {
-  const stored = localStorage.getItem('fastcripto_transactions');
-  return stored ? JSON.parse(stored) : [];
 }
 
 // Exportar globalmente para uso em scripts que não usam módulos
 if (typeof window !== 'undefined') {
   window.showInAppNotification = showInAppNotification;
   window.sendTransactionNotification = sendTransactionNotification;
-  window.sendKycNotification = sendKycNotification;
 }

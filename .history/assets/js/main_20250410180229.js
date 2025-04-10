@@ -653,111 +653,260 @@ function handleStartKYC() {
         <button class="kyc-modal-close">&times;</button>
       </div>
       <div class="kyc-modal-body">
-        <p>Para completar suas transações, precisamos verificar sua identidade conforme exigido pelas regulamentações brasileiras.</p>
+        <div class="kyc-step active" data-step="1">
+          <p>Para completar suas transações, precisamos verificar sua identidade conforme exigido pelas regulamentações brasileiras.</p>
+          
+          <form id="kyc-form-personal">
+            <div class="form-group">
+              <label for="kyc-name">Nome Completo</label>
+              <input type="text" id="kyc-name" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="kyc-cpf">CPF</label>
+              <input type="text" id="kyc-cpf" placeholder="000.000.000-00" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="kyc-birthdate">Data de Nascimento</label>
+              <input type="date" id="kyc-birthdate" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="kyc-phone">Telefone</label>
+              <input type="text" id="kyc-phone" placeholder="(00) 00000-0000" required>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn primary" id="kyc-next-step">Próximo</button>
+            </div>
+          </form>
+        </div>
         
-        <form id="kyc-form">
-          <div class="form-group">
-            <label for="kyc-name">Nome Completo</label>
-            <input type="text" id="kyc-name" required>
-          </div>
+        <div class="kyc-step" data-step="2">
+          <p>Envie os documentos necessários para a verificação.</p>
           
-          <div class="form-group">
-            <label for="kyc-cpf">CPF</label>
-            <input type="text" id="kyc-cpf" placeholder="000.000.000-00" required>
-          </div>
-          
-          <div class="form-group">
-            <label for="kyc-birthdate">Data de Nascimento</label>
-            <input type="date" id="kyc-birthdate" required>
-          </div>
-          
-          <div class="form-group">
-            <label for="kyc-phone">Telefone</label>
-            <input type="text" id="kyc-phone" placeholder="(00) 00000-0000" required>
-          </div>
-          
-          <div class="form-group">
-            <label>Documentos (em implementação)</label>
-            <div class="kyc-docs">
-              <div class="kyc-doc-upload">
-                <span>RG/CNH (frente)</span>
-                <button type="button" class="btn small" disabled>Upload</button>
-              </div>
-              <div class="kyc-doc-upload">
-                <span>RG/CNH (verso)</span>
-                <button type="button" class="btn small" disabled>Upload</button>
-              </div>
-              <div class="kyc-doc-upload">
-                <span>Selfie com documento</span>
-                <button type="button" class="btn small" disabled>Upload</button>
+          <form id="kyc-form-documents">
+            <div class="form-group">
+              <label>Documento de Identidade (RG/CNH)</label>
+              <div class="kyc-docs">
+                <div class="kyc-doc-upload">
+                  <div class="doc-preview" id="doc-front-preview">
+                    <i class="bi bi-card-image"></i>
+                    <span>Frente</span>
+                  </div>
+                  <input type="file" id="doc-front" accept="image/*" style="display:none;">
+                  <button type="button" class="btn small" id="btn-doc-front">Escolher Arquivo</button>
+                </div>
+                
+                <div class="kyc-doc-upload">
+                  <div class="doc-preview" id="doc-back-preview">
+                    <i class="bi bi-card-image"></i>
+                    <span>Verso</span>
+                  </div>
+                  <input type="file" id="doc-back" accept="image/*" style="display:none;">
+                  <button type="button" class="btn small" id="btn-doc-back">Escolher Arquivo</button>
+                </div>
               </div>
             </div>
+            
+            <div class="form-group">
+              <label>Selfie com Documento</label>
+              <div class="kyc-doc-upload wide">
+                <div class="doc-preview" id="selfie-preview">
+                  <i class="bi bi-person-square"></i>
+                  <span>Selfie</span>
+                </div>
+                <input type="file" id="doc-selfie" accept="image/*" style="display:none;">
+                <button type="button" class="btn small" id="btn-doc-selfie">Escolher Arquivo</button>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn secondary" id="kyc-prev-step">Voltar</button>
+              <button type="submit" class="btn primary" id="kyc-submit">Enviar para Verificação</button>
+            </div>
+          </form>
+        </div>
+        
+        <div class="kyc-step" data-step="3">
+          <div class="kyc-success">
+            <i class="bi bi-check-circle-fill"></i>
+            <h3>Verificação Enviada!</h3>
+            <p>Seus documentos foram enviados com sucesso e estão em análise. Este processo pode levar até 24 horas.</p>
+            <p>Você receberá uma notificação assim que a verificação for concluída.</p>
+            
+            <div class="form-actions">
+              <button type="button" class="btn primary" id="kyc-finish">Concluir</button>
+            </div>
           </div>
-          
-          <div class="form-actions">
-            <button type="submit" class="btn primary">Enviar para Verificação</button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   `;
 
   document.body.appendChild(modal);
 
-  // Configurar eventos
+  // Seletores dos elementos
   const closeButton = modal.querySelector('.kyc-modal-close');
+  const nextButton = modal.querySelector('#kyc-next-step');
+  const prevButton = modal.querySelector('#kyc-prev-step');
+  const submitButton = modal.querySelector('#kyc-submit');
+  const finishButton = modal.querySelector('#kyc-finish');
+
+  // Botões para upload de documentos
+  const btnDocFront = modal.querySelector('#btn-doc-front');
+  const btnDocBack = modal.querySelector('#btn-doc-back');
+  const btnDocSelfie = modal.querySelector('#btn-doc-selfie');
+  
+  // Campos de arquivo
+  const docFrontInput = modal.querySelector('#doc-front');
+  const docBackInput = modal.querySelector('#doc-back');
+  const docSelfieInput = modal.querySelector('#doc-selfie');
+
+  // Pré-visualizações
+  const docFrontPreview = modal.querySelector('#doc-front-preview');
+  const docBackPreview = modal.querySelector('#doc-back-preview');
+  const docSelfiePreview = modal.querySelector('#selfie-preview');
+
+  // Etapas do KYC
+  const steps = modal.querySelectorAll('.kyc-step');
+  let currentStep = 1;
+
+  // Configurar eventos de navegação
   closeButton.addEventListener('click', function () {
     document.body.removeChild(modal);
   });
 
-  const kycForm = modal.querySelector('#kyc-form');
-  kycForm.addEventListener('submit', function (e) {
-    e.preventDefault();
+  // Navegar para a próxima etapa
+  nextButton.addEventListener('click', function () {
+    const personalForm = document.getElementById('kyc-form-personal');
+    
+    // Validar o formulário
+    if (!personalForm.checkValidity()) {
+      // Mostrar erros de validação nativos do navegador
+      personalForm.reportValidity();
+      return;
+    }
+    
+    // Avançar para a próxima etapa
+    goToStep(currentStep + 1);
+  });
 
-    // Simular envio
-    const submitButton = kycForm.querySelector('button[type="submit"]');
+  // Voltar para a etapa anterior
+  prevButton.addEventListener('click', function () {
+    goToStep(currentStep - 1);
+  });
+
+  // Enviar formulário
+  submitButton.addEventListener('click', function (e) {
+    e.preventDefault();
+    
+    // Verificar se pelo menos um documento foi selecionado
+    if (!docFrontInput.files.length) {
+      showInAppNotification("Por favor, envie a frente do seu documento", "warning");
+      return;
+    }
+    
+    // Simular envio de formulário
     submitButton.textContent = 'Enviando...';
     submitButton.disabled = true;
-
+    
+    // Simular processamento
     setTimeout(() => {
-      // Atualizar transações pendentes
-      const transactions = getTransactionsFromStorage();
-      let updated = false;
-
-      transactions.forEach((t) => {
-        if (t.status === 'pending_kyc') {
-          t.status = 'processing';
-          t.kycSubmitted = true;
-          updated = true;
+      goToStep(3);
+      
+      // Disparar evento de mudança de status de KYC
+      const event = new CustomEvent('kycStatusChanged', {
+        detail: {
+          status: 'pending',
+          message: 'Sua verificação KYC foi recebida e está em processamento'
         }
       });
-
-      if (updated) {
-        localStorage.setItem(
-          'fastcripto_transactions',
-          JSON.stringify(transactions)
-        );
-        loadUserTransactions();
-      }
-
-      // Fechar modal
-      document.body.removeChild(modal);
-
-      // Mostrar mensagem de sucesso
-      showAlert(
-        'Verificação enviada com sucesso! Suas transações serão processadas em breve.',
-        'success'
-      );
-
-      // Navegar para a página de transações
-      const transactionsTab = document.querySelector(
-        '.tab-nav[data-tab="transactions"]'
-      );
-      if (transactionsTab) transactionsTab.click();
+      document.dispatchEvent(event);
+      
+      // Atualizar transações
+      updateTransactionsAfterKycSubmission();
     }, 2000);
   });
 
-  // Máscara para CPF
+  // Finalizar o processo
+  finishButton.addEventListener('click', function () {
+    document.body.removeChild(modal);
+    
+    // Navegar para a página de transações para mostrar o status atualizado
+    const transactionsTab = document.querySelector('.tab-nav[data-tab="transactions"]');
+    if (transactionsTab) transactionsTab.click();
+  });
+
+  // Configurar botões de upload de documentos
+  btnDocFront.addEventListener('click', function() {
+    docFrontInput.click();
+  });
+  
+  btnDocBack.addEventListener('click', function() {
+    docBackInput.click();
+  });
+  
+  btnDocSelfie.addEventListener('click', function() {
+    docSelfieInput.click();
+  });
+  
+  // Mostrar pré-visualização quando arquivos são selecionados
+  docFrontInput.addEventListener('change', function() {
+    showImagePreview(this, docFrontPreview);
+  });
+  
+  docBackInput.addEventListener('change', function() {
+    showImagePreview(this, docBackPreview);
+  });
+  
+  docSelfieInput.addEventListener('change', function() {
+    showImagePreview(this, docSelfiePreview);
+  });
+
+  // Função para navegar entre etapas
+  function goToStep(step) {
+    steps.forEach(s => s.classList.remove('active'));
+    currentStep = step;
+    modal.querySelector(`.kyc-step[data-step="${step}"]`).classList.add('active');
+  }
+  
+  // Função para mostrar pré-visualização de imagem
+  function showImagePreview(input, previewElement) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        // Substituir ícone e texto por imagem
+        previewElement.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+        previewElement.classList.add('has-image');
+      }
+      
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+  
+  // Função para atualizar transações após envio do KYC
+  function updateTransactionsAfterKycSubmission() {
+    const transactions = getTransactionsFromStorage();
+    let updated = false;
+    
+    transactions.forEach(t => {
+      if (t.status === 'pending_kyc') {
+        t.kycSubmitted = true;
+        updated = true;
+      }
+    });
+    
+    if (updated) {
+      localStorage.setItem('fastcripto_transactions', JSON.stringify(transactions));
+      loadUserTransactions();
+    }
+  }
+
+  // Máscaras para os campos
+  // CPF
   const cpfInput = document.getElementById('kyc-cpf');
   if (cpfInput) {
     cpfInput.addEventListener('input', function (e) {
@@ -782,7 +931,7 @@ function handleStartKYC() {
     });
   }
 
-  // Máscara para telefone
+  // Telefone
   const phoneInput = document.getElementById('kyc-phone');
   if (phoneInput) {
     phoneInput.addEventListener('input', function (e) {

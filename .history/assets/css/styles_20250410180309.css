@@ -927,3 +927,192 @@ section {
 .conversion-result {
   animation: slideInRight 0.5s ease forwards;
 }
+
+/* KYC Modal Styles */
+.kyc-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.kyc-modal-content {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.kyc-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #e1e1e1;
+}
+
+.kyc-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+.kyc-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.kyc-modal-close:hover {
+  color: var(--primary-color);
+}
+
+.kyc-modal-body {
+  padding: 25px;
+}
+
+.kyc-step {
+  display: none;
+}
+
+.kyc-step.active {
+  display: block;
+}
+
+.kyc-step p {
+  margin-bottom: 20px;
+  color: #555;
+}
+
+.kyc-docs {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.kyc-doc-upload {
+  flex: 1;
+  min-width: 200px;
+  text-align: center;
+}
+
+.kyc-doc-upload.wide {
+  flex-basis: 100%;
+}
+
+.doc-preview {
+  width: 100%;
+  height: 150px;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f9f9f9;
+  overflow: hidden;
+}
+
+.doc-preview i {
+  font-size: 36px;
+  color: #aaa;
+  margin-bottom: 8px;
+}
+
+.doc-preview.has-image {
+  border-style: solid;
+  border-color: var(--primary-color);
+}
+
+.doc-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.kyc-success {
+  text-align: center;
+  padding: 30px 0;
+}
+
+.kyc-success i {
+  font-size: 60px;
+  color: var(--primary-color);
+  margin-bottom: 20px;
+}
+
+.kyc-success h3 {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+.kyc-success p {
+  margin-bottom: 20px;
+  color: #555;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 768px) {
+  .kyc-modal-content {
+    margin: 0;
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .kyc-docs {
+    flex-direction: column;
+  }
+  
+  .kyc-doc-upload {
+    flex: auto;
+  }
+}
+
+/* Badge styles for KYC status */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.badge-success {
+  background-color: #d4f8d4;
+  color: #0a6b0a;
+}
+
+.badge-error {
+  background-color: #f8d4d4;
+  color: #6b0a0a;
+}
+
+.badge-warning {
+  background-color: #f8f0d4;
+  color: #6b4c0a;
+}
+
+.badge-info {
+  background-color: #d4e6f8;
+  color: #0a4b6b;
+}

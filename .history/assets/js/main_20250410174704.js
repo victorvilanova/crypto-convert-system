@@ -288,13 +288,15 @@ function handleCalculateConversion() {
 
   // Calcular taxas
   const iofRate = CONFIG.iofRate;
-  const serviceRate = CONFIG.serviceRate; // Taxa de serviço 6%
+  const incomeTaxRate = CONFIG.incomeTaxRate;
+  const serviceRate = CONFIG.serviceRate;
 
   const iofAmount = brlAmount * iofRate;
+  const incomeTaxAmount = brlAmount * incomeTaxRate;
   const serviceAmount = brlAmount * serviceRate;
 
-  // Calcular valor líquido (sem IR)
-  const netAmount = brlAmount - iofAmount - serviceAmount;
+  // Calcular valor líquido
+  const netAmount = brlAmount - iofAmount - incomeTaxAmount - serviceAmount;
 
   // Calcular valor em cripto
   const cryptoAmount = netAmount / rate;
@@ -335,13 +337,16 @@ function handleCalculateConversion() {
       formatCurrency(brlAmount);
     document.getElementById('result-iof').textContent =
       formatCurrency(iofAmount);
+    document.getElementById('result-income-tax').textContent =
+      formatCurrency(incomeTaxAmount);
     document.getElementById('result-service-fee').textContent =
       formatCurrency(serviceAmount);
-    document.getElementById('result-network-fee').textContent =
-      networkFee + ' ' + selectedCrypto;
     document.getElementById('result-net-amount').textContent =
       formatCurrency(netAmount);
-    document.getElementById('result-rate').textContent = formatCurrency(rate);
+    document.getElementById('result-rate').textContent =
+      formatCurrency(rate);
+    document.getElementById('result-network-fee').textContent =
+      networkFee + ' ' + selectedCrypto;
     document.getElementById('result-crypto-amount').textContent =
       finalCryptoAmount.toFixed(8) + ' ' + selectedCrypto;
   }
@@ -361,6 +366,7 @@ function handleCalculateConversion() {
   currentConversion = {
     brlAmount,
     iofAmount,
+    incomeTaxAmount,
     serviceAmount,
     netAmount,
     cryptoAmount,
@@ -861,19 +867,13 @@ function validateWalletAddress() {
           'Endereço de USDT na rede Ethereum inválido'
         );
         return false;
-      } else if (
-        network === 'BSC' &&
-        !/^0x[a-fA-F0-9]{40}$/.test(walletValue)
-      ) {
+      } else if (network === 'BSC' && !/^0x[a-fA-F0-9]{40}$/.test(walletValue)) {
         showValidationError(
           walletInput,
           'Endereço de USDT na rede BSC inválido'
         );
         return false;
-      } else if (
-        network === 'TRON' &&
-        !/^T[A-Za-z1-9]{33}$/.test(walletValue)
-      ) {
+      } else if (network === 'TRON' && !/^T[A-Za-z1-9]{33}$/.test(walletValue)) {
         showValidationError(
           walletInput,
           'Endereço de USDT na rede TRON inválido (deve começar com T e ter 34 caracteres)'

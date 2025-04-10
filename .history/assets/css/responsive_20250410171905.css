@@ -5,11 +5,11 @@
   .rates-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
-
+  
   .transactions-list {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
-
+  
   .footer-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -74,25 +74,25 @@
     margin: 1.25rem -1rem -1rem -1rem;
     font-size: 1.25rem;
   }
-
+  
   .transactions-list {
     grid-template-columns: 1fr;
   }
-
+  
   .form-actions {
     flex-direction: column;
   }
-
+  
   .form-actions button {
     width: 100%;
     margin-bottom: 0.5rem;
   }
-
+  
   .kyc-modal-content {
     width: 95%;
     max-height: 95vh;
   }
-
+  
   .kyc-docs {
     grid-template-columns: 1fr;
   }
@@ -103,44 +103,44 @@
   h1 {
     font-size: 1.5rem;
   }
-
+  
   .subtitle {
     font-size: 1rem;
   }
-
+  
   .conversion-card {
     padding: 1rem;
   }
-
+  
   .conversion-steps {
     font-size: 0.75rem;
   }
-
+  
   .rates-grid {
     grid-template-columns: 1fr;
   }
-
+  
   .footer-grid {
     grid-template-columns: 1fr;
   }
-
+  
   .result-row {
     font-size: 0.875rem;
   }
-
+  
   .result-row.total,
   .result-row.crypto-result {
     font-size: 1rem;
   }
-
+  
   .kyc-modal-header {
     padding: 1rem;
   }
-
+  
   .kyc-modal-body {
     padding: 1rem;
   }
-
+  
   .kyc-modal-header h2 {
     font-size: 1.25rem;
   }

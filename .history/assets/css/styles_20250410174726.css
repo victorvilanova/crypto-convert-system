@@ -588,10 +588,7 @@ small {
   // ...existing code...
 }
 
-.icon-btc,
-.icon-eth,
-.icon-bsc,
-.icon-tron {
+.icon-btc, .icon-eth, .icon-bsc, .icon-tron {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -622,7 +619,7 @@ small {
 }
 
 .icon-tron::before {
-  content: 'TRON';
+  content: "TRON";
 }
 
 /* Melhorar a aparência do resultado de conversão */
