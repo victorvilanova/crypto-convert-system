@@ -1,75 +1,77 @@
 /* Variáveis de tema - Sistema de cores para tema claro/escuro */
 :root {
   /* Cores base - Tema claro (padrão) */
-  --primary-color: #4caf50;
-  --primary-light: #80e27e;
-  --primary-dark: #087f23;
-  --secondary-color: #2e7d32;
-  --accent-color: #3949ab;
+  --primary-color: #5d5fef;
+  --primary-light: #8286ff;
+  --primary-dark: #4749d4;
+  --secondary-color: #0f172a;
+  --accent-color: #fb7185;
 
   /* Cores de texto */
-  --text-primary: #333333;
-  --text-secondary: #555555;
-  --text-muted: #757575;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
   --text-inverse: #ffffff;
 
   /* Cores de fundo */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9f9f9;
-  --bg-tertiary: #e9e9e9;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-tertiary: #e2e8f0;
   --bg-card: #ffffff;
 
   /* Cores de estado */
-  --success-color: #4caf50;
-  --warning-color: #ff9800;
-  --error-color: #f44336;
-  --info-color: #2196f3;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --info-color: #3b82f6;
 
   /* Elementos de UI */
-  --border-color: #e0e0e0;
+  --border-color: #e2e8f0;
   --shadow-color: rgba(0, 0, 0, 0.1);
-  --divider-color: #e0e0e0;
+  --divider-color: #e2e8f0;
 
   /* Outros */
-  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  --gradient-secondary: linear-gradient(135deg, #4caf50 0%, #26a69a 100%);
+  --gradient-primary: linear-gradient(135deg, #5d5fef 0%, #8b5cf6 100%);
+  --gradient-secondary: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+  --gradient-accent: linear-gradient(135deg, #f472b6 0%, #fb7185 100%);
 }
 
 /* Tema escuro */
 [data-theme='dark'] {
   /* Cores base - Tema escuro */
-  --primary-color: #43a047;
-  --primary-light: #76d275;
-  --primary-dark: #00701a;
-  --secondary-color: #1b5e20;
-  --accent-color: #5c6bc0;
+  --primary-color: #6366f1;
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  --secondary-color: #0f172a;
+  --accent-color: #f472b6;
 
   /* Cores de texto */
-  --text-primary: #e0e0e0;
-  --text-secondary: #c0c0c0;
-  --text-muted: #aaaaaa;
-  --text-inverse: #121212;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-inverse: #0f172a;
 
   /* Cores de fundo */
-  --bg-primary: #121212;
-  --bg-secondary: #1e1e1e;
-  --bg-tertiary: #2d2d2d;
-  --bg-card: #1d1d1d;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: #1e293b;
 
   /* Cores de estado */
-  --success-color: #4caf50;
-  --warning-color: #ff9800;
-  --error-color: #e57373;
-  --info-color: #64b5f6;
+  --success-color: #059669;
+  --warning-color: #d97706;
+  --error-color: #dc2626;
+  --info-color: #3b82f6;
 
   /* Elementos de UI */
-  --border-color: #333333;
+  --border-color: #334155;
   --shadow-color: rgba(0, 0, 0, 0.3);
-  --divider-color: #444444;
+  --divider-color: #334155;
 
   /* Outros - ajustados para tema escuro */
-  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  --gradient-secondary: linear-gradient(135deg, #43a047 0%, #26a69a 100%);
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-secondary: linear-gradient(135deg, #059669 0%, #0891b2 100%);
+  --gradient-accent: linear-gradient(135deg, #f472b6 0%, #fb7185 100%);
 }
 
 /* Estilos gerais para tema claro/escuro */
@@ -79,30 +81,36 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.card {
+.card, 
+.conversion-card, 
+.rate-card, 
+.transaction-card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   box-shadow: 0 4px 6px var(--shadow-color);
 }
 
-.btn-primary {
-  background-color: var(--primary-color);
+.btn-primary, .btn.primary {
+  background: var(--gradient-primary);
   color: var(--text-inverse);
 }
 
-.btn-secondary {
-  background-color: var(--secondary-color);
-  color: var(--text-inverse);
+.btn-secondary, .btn.secondary {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
 }
 
 /* Ajustes específicos para tema escuro */
 [data-theme='dark'] .header {
-  background-color: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--gradient-primary);
 }
 
-[data-theme='dark'] .card {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+[data-theme='dark'] .card,
+[data-theme='dark'] .conversion-card, 
+[data-theme='dark'] .rate-card, 
+[data-theme='dark'] .transaction-card {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  border-color: var(--border-color);
 }
 
 [data-theme='dark'] input,
@@ -113,14 +121,74 @@ body {
   border-color: var(--border-color);
 }
 
-[data-theme='dark'] table {
+[data-theme='dark'] .crypto-option,
+[data-theme='dark'] .network-option {
+  background-color: var(--bg-secondary);
   border-color: var(--border-color);
 }
 
-[data-theme='dark'] th {
-  background-color: var(--bg-tertiary);
+[data-theme='dark'] .crypto-icon {
+  background: rgba(99, 102, 241, 0.2);
 }
 
-[data-theme='dark'] tr:nth-child(even) {
+[data-theme='dark'] .result-row {
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] .result-row.crypto-result {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+[data-theme='dark'] .conversion-result {
   background-color: var(--bg-secondary);
+}
+
+/* Botão de alternância de tema */
+.theme-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+  transform: rotate(30deg);
+}
+
+/* Adicionar ícones */
+.icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-header .icon-wrapper {
+  width: 40px;
+  height: 40px;
+  margin-right: 15px;
+  background: var(--gradient-primary);
+  border-radius: 10px;
+  color: white;
+  font-size: 1.5rem;
 }
