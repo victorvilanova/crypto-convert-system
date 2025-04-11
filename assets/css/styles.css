@@ -561,31 +561,15 @@ small {
 }
 
 .network-option {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  display: inline-block;
+  margin-right: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.network-option:hover {
-  border-color: var(--primary-color);
-}
-
-.network-option input[type='radio'] {
-  margin-right: 0.25rem;
-}
-
-/* Ícones de redes */
-.network-option {
-  // ...existing code...
 }
 
 .network-icon {
-  // ...existing code...
+  display: inline-block;
+  width: 24px;
+  height: 24px;
 }
 
 .icon-btc,
@@ -737,6 +721,20 @@ section {
   .form-actions {
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .step {
+    font-size: 0.8rem;
+    padding: 8px 5px;
+  }
+  
+  .conversion-steps::before {
+    display: none;
+  }
+  
+  .step::before,
+  .step::after {
+    display: none;
   }
 }
 
@@ -926,4 +924,212 @@ section {
 
 .conversion-result {
   animation: slideInRight 0.5s ease forwards;
+}
+
+/* Estilos para o sistema de etapas */
+
+/* Container de etapas */
+.converter-steps-container {
+  margin-top: 20px;
+}
+
+/* Individual steps */
+.conversion-step {
+  display: none;
+}
+
+.conversion-step.active {
+  display: block;
+  animation: fadeIn 0.5s ease;
+}
+
+/* Indicadores de etapas */
+.conversion-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.conversion-steps::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #e0e0e0;
+  z-index: 1;
+  transform: translateY(-50%);
+}
+
+.step {
+  width: 33.33%;
+  text-align: center;
+  padding: 10px;
+  position: relative;
+  z-index: 2;
+  background: #f5f5f5;
+  border-radius: 5px;
+  font-weight: 500;
+  color: #888;
+  transition: all 0.3s ease;
+}
+
+.step.active {
+  background: #007bff;
+  color: white;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+.step.completed {
+  background: #28a745;
+  color: white;
+}
+
+.step::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background: inherit;
+  border-radius: 50%;
+  z-index: 3;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -10px;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background: inherit;
+  border-radius: 50%;
+  z-index: 3;
+}
+
+/* Botões de navegação */
+.form-actions {
+  margin-top: 20px;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.justify-content-between {
+  justify-content: space-between !important;
+}
+
+.btn.secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn.secondary:hover {
+  background: #5a6268;
+}
+
+/* Aviso de verificação de endereço */
+#wallet-address-warning {
+  color: #dc3545;
+  margin-top: 5px;
+  font-size: 0.85rem;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Formulário KYC */
+.form-check {
+  margin-top: 1rem;
+}
+
+.form-check-input {
+  margin-right: 0.5rem;
+}
+
+/* Transaction success */
+.transaction-success {
+  animation: fadeIn 0.5s ease;
+}
+
+.transaction-details {
+  background: rgba(255, 255, 255, 0.7);
+  padding: 10px;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Melhorias de estilo para os resultados */
+.conversion-result {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.conversion-result h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 5px 0;
+}
+
+.result-row.total {
+  font-weight: bold;
+  font-size: 1.1rem;
+  border-top: 1px dashed #dee2e6;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.result-row.crypto-result {
+  background: #e9f7fe;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 15px;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .step {
+    font-size: 0.8rem;
+    padding: 8px 5px;
+  }
+  
+  .conversion-steps::before {
+    display: none;
+  }
+  
+  .step::before,
+  .step::after {
+    display: none;
+  }
 }

@@ -2,6 +2,10 @@
  * Sistema de notificações
  * Gerencia diferentes tipos de notificações para o usuário
  */
+import { getLogger } from './Logger';
+
+// Criar uma instância de logger específica para NotificationManager
+const logger = getLogger('NotificationManager');
 
 class NotificationManager {
   constructor(options = {}) {
@@ -18,8 +22,13 @@ class NotificationManager {
     this.container = null;
     this.initialized = false;
     
+    // Registrar event listeners para referência futura
+    this.eventListeners = new Map();
+    
     // Inicializar o sistema
     this.init();
+    
+    logger.info('NotificationManager inicializado');
   }
   
   /**
@@ -82,6 +91,8 @@ class NotificationManager {
     
     // Adicionar estilos globais para animações
     this._addGlobalStyles();
+    
+    logger.debug('Container de notificações criado');
   }
   
   /**
@@ -221,6 +232,7 @@ class NotificationManager {
     `;
     
     document.head.appendChild(styleEl);
+    logger.debug('Estilos de notificação adicionados ao DOM');
   }
   
   /**
@@ -276,6 +288,8 @@ class NotificationManager {
         this.close(notification.id);
       }, notification.duration);
     }
+    
+    logger.debug(`Notificação criada: [${notification.type}] ${notification.title || notification.message}`);
     
     return {
       id: notification.id,
@@ -343,14 +357,31 @@ class NotificationManager {
     if (notification.dismissible) {
       const closeBtn = element.querySelector('.notification-close');
       if (closeBtn) {
-        closeBtn.addEventListener('click', () => this.close(notification.id));
+        const closeHandler = () => this.close(notification.id);
+        closeBtn.addEventListener('click', closeHandler);
+        
+        // Armazenar referência do handler para limpeza posterior
+        this.eventListeners.set(`close-${notification.id}`, {
+          element: closeBtn,
+          event: 'click',
+          handler: closeHandler
+        });
       }
       
       // Fechar ao clicar, se configurado
       if (notification.closeOnClick) {
-        element.addEventListener('click', (e) => {
+        const clickHandler = (e) => {
           if (e.target.closest('.notification-action')) return;
           this.close(notification.id);
+        };
+        
+        element.addEventListener('click', clickHandler);
+        
+        // Armazenar referência do handler para limpeza posterior
+        this.eventListeners.set(`click-${notification.id}`, {
+          element: element,
+          event: 'click',
+          handler: clickHandler
         });
       }
     }
@@ -441,10 +472,27 @@ class NotificationManager {
         audio.volume = 0.5;
         audio.play().catch(e => {
           // Ignora erros - os navegadores bloqueiam reprodução automática
+          logger.debug('Reprodução de som bloqueada pelo navegador');
         });
       }
     } catch (e) {
-      console.warn('Falha ao reproduzir som de notificação', e);
+      logger.warn('Falha ao reproduzir som de notificação', e);
+    }
+  }
+  
+  /**
+   * Remove um event listener específico do registro
+   * @private
+   * @param {string} key - Chave do event listener
+   */
+  _removeEventListener(key) {
+    const listener = this.eventListeners.get(key);
+    if (listener) {
+      const { element, event, handler } = listener;
+      if (element) {
+        element.removeEventListener(event, handler);
+      }
+      this.eventListeners.delete(key);
     }
   }
   
@@ -462,6 +510,10 @@ class NotificationManager {
       if (notification.timer) {
         clearTimeout(notification.timer);
       }
+      
+      // Remover event listeners específicos desta notificação
+      this._removeEventListener(`close-${id}`);
+      this._removeEventListener(`click-${id}`);
       
       // Animar a saída
       if (notification.element) {
@@ -482,6 +534,7 @@ class NotificationManager {
       
       // Remover da lista
       this.notifications.splice(index, 1);
+      logger.debug(`Notificação fechada: ${id}`);
     }
   }
   
@@ -489,9 +542,48 @@ class NotificationManager {
    * Fecha todas as notificações
    */
   closeAll() {
+    logger.debug('Fechando todas as notificações');
     [...this.notifications].forEach(notification => {
       this.close(notification.id);
     });
+  }
+  
+  /**
+   * Libera recursos e remove o container
+   */
+  destroy() {
+    logger.info('Destruindo NotificationManager');
+    
+    // Fechar todas as notificações
+    this.closeAll();
+    
+    // Limpar todos os event listeners
+    this.eventListeners.forEach((listener, key) => {
+      const { element, event, handler } = listener;
+      if (element) {
+        element.removeEventListener(event, handler);
+      }
+    });
+    this.eventListeners.clear();
+    
+    // Remover o container do DOM
+    if (this.container && this.container.parentNode) {
+      this.container.parentNode.removeChild(this.container);
+    }
+    
+    // Remover os estilos globais
+    const styleEl = document.getElementById('notification-styles');
+    if (styleEl && styleEl.parentNode) {
+      styleEl.parentNode.removeChild(styleEl);
+    }
+    
+    // Limpar propriedades
+    this.container = null;
+    this.notifications = [];
+    this.initialized = false;
+    
+    logger.info('NotificationManager destruído com sucesso');
+    return true;
   }
   
   /**
@@ -611,26 +703,51 @@ class NotificationManager {
         const cancelBtn = notification.element.querySelector('[data-action="cancel"]');
         
         if (confirmBtn) {
-          confirmBtn.addEventListener('click', () => {
+          const confirmHandler = () => {
             this.close(notification.id);
             resolve(true);
+          };
+          confirmBtn.addEventListener('click', confirmHandler);
+          
+          // Armazenar referência do handler para limpeza posterior
+          this.eventListeners.set(`confirm-${notification.id}`, {
+            element: confirmBtn,
+            event: 'click',
+            handler: confirmHandler
           });
         }
         
         if (cancelBtn) {
-          cancelBtn.addEventListener('click', () => {
+          const cancelHandler = () => {
             this.close(notification.id);
             resolve(false);
+          };
+          cancelBtn.addEventListener('click', cancelHandler);
+          
+          // Armazenar referência do handler para limpeza posterior
+          this.eventListeners.set(`cancel-${notification.id}`, {
+            element: cancelBtn,
+            event: 'click',
+            handler: cancelHandler
           });
         }
         
         // Se for clicável
         if (options.closeOnClick) {
-          notification.element.addEventListener('click', (e) => {
+          const clickHandler = (e) => {
             if (!e.target.closest('.notification-action')) {
               this.close(notification.id);
               resolve(false);
             }
+          };
+          
+          notification.element.addEventListener('click', clickHandler);
+          
+          // Armazenar referência do handler para limpeza posterior
+          this.eventListeners.set(`click-${notification.id}`, {
+            element: notification.element,
+            event: 'click',
+            handler: clickHandler
           });
         }
       }
@@ -698,6 +815,8 @@ class NotificationManager {
           break;
       }
     }
+    
+    logger.debug('Opções de notificação atualizadas', options);
   }
 }
 
@@ -716,5 +835,6 @@ export const notify = {
   info: (message, titleOrOptions) => notificationManager.info(message, titleOrOptions),
   custom: (options) => notificationManager.custom(options),
   confirm: (options) => notificationManager.confirm(options),
-  closeAll: () => notificationManager.closeAll()
+  closeAll: () => notificationManager.closeAll(),
+  destroy: () => notificationManager.destroy()
 };

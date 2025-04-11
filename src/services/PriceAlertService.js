@@ -1,6 +1,11 @@
 /**
  * Classe para gerenciamento de alertas de preço
  */
+import { getLogger } from '../utils/Logger';
+
+// Criar uma instância de logger específica para PriceAlertService
+const logger = getLogger('PriceAlertService');
+
 export class PriceAlertService {
   /**
    * @param {Object} options - Opções de configuração
@@ -31,7 +36,9 @@ export class PriceAlertService {
 
     // Configurar evento de sincronização entre abas
     if (typeof window !== 'undefined' && window.addEventListener) {
-      window.addEventListener('storage', this._handleStorageEvent.bind(this));
+      // Usar uma referência à função bound para facilitar a remoção posterior
+      this._boundHandleStorageEvent = this._handleStorageEvent.bind(this);
+      window.addEventListener('storage', this._boundHandleStorageEvent);
     }
   }
 
@@ -46,7 +53,7 @@ export class PriceAlertService {
       !this.fetchPriceCallback ||
       typeof this.fetchPriceCallback !== 'function'
     ) {
-      console.error(
+      logger.error(
         'fetchPriceCallback é necessário para iniciar o serviço de alertas'
       );
       return false;
@@ -62,7 +69,7 @@ export class PriceAlertService {
       this._checkAlerts();
     }, this.checkInterval);
 
-    console.log(
+    logger.info(
       `Serviço de alertas de preço iniciado. Verificando a cada ${
         this.checkInterval / 1000
       } segundos.`
@@ -82,7 +89,7 @@ export class PriceAlertService {
     this.checkIntervalId = null;
     this.isRunning = false;
 
-    console.log('Serviço de alertas de preço parado.');
+    logger.info('Serviço de alertas de preço parado.');
 
     return true;
   }
@@ -110,7 +117,7 @@ export class PriceAlertService {
     this.alerts.push(newAlert);
     this._saveAlerts();
 
-    console.log(
+    logger.info(
       `Alerta de preço criado: ${newAlert.crypto} ${newAlert.condition} ${newAlert.price} ${newAlert.targetCurrency}`
     );
 
@@ -127,7 +134,7 @@ export class PriceAlertService {
     const index = this.alerts.findIndex((alert) => alert.id === id);
 
     if (index === -1) {
-      console.error(`Alerta com ID ${id} não encontrado`);
+      logger.error(`Alerta com ID ${id} não encontrado`);
       return false;
     }
 
@@ -135,7 +142,7 @@ export class PriceAlertService {
 
     // Verificar se a atualização mantém o alerta válido
     if (!this._validateAlert(updatedAlert)) {
-      console.error('Atualização inválida para o alerta');
+      logger.error('Atualização inválida para o alerta');
       return false;
     }
 
@@ -236,7 +243,7 @@ export class PriceAlertService {
     const alert = this.getAlertById(id);
 
     if (!alert) {
-      console.error(`Alerta com ID ${id} não encontrado`);
+      logger.error(`Alerta com ID ${id} não encontrado`);
       return false;
     }
 
@@ -244,7 +251,7 @@ export class PriceAlertService {
       const price = await this._fetchPrice(alert.crypto, alert.targetCurrency);
       return this._evaluateAlert(alert, price, true);
     } catch (error) {
-      console.error(`Erro ao testar alerta ${id}:`, error);
+      logger.error(`Erro ao testar alerta ${id}:`, error);
       return false;
     }
   }
@@ -286,7 +293,7 @@ export class PriceAlertService {
       );
 
       if (validAlerts.length !== parsedAlerts.length) {
-        console.warn(
+        logger.warn(
           `${
             parsedAlerts.length - validAlerts.length
           } alertas inválidos foram ignorados.`
@@ -309,7 +316,7 @@ export class PriceAlertService {
 
       return true;
     } catch (error) {
-      console.error('Erro ao importar alertas:', error);
+      logger.error('Erro ao importar alertas:', error);
       return false;
     }
   }
@@ -386,7 +393,7 @@ export class PriceAlertService {
         }
       }
     } catch (error) {
-      console.error('Erro ao carregar alertas:', error);
+      logger.error('Erro ao carregar alertas:', error);
       this.alerts = [];
     }
   }
@@ -403,7 +410,7 @@ export class PriceAlertService {
 
       localStorage.setItem(this.storageKey, JSON.stringify(this.alerts));
     } catch (error) {
-      console.error('Erro ao salvar alertas:', error);
+      logger.error('Erro ao salvar alertas:', error);
     }
   }
 
@@ -431,7 +438,7 @@ export class PriceAlertService {
           this.nextAlertId = 1;
         }
       } catch (error) {
-        console.error('Erro ao processar mudanças de outra aba:', error);
+        logger.error('Erro ao processar mudanças de outra aba:', error);
       }
     }
   }
@@ -444,7 +451,7 @@ export class PriceAlertService {
    */
   async _checkAlerts(testMode = false) {
     if (!this.fetchPriceCallback) {
-      console.error('fetchPriceCallback não definido');
+      logger.error('fetchPriceCallback não definido');
       return [];
     }
 
@@ -494,7 +501,7 @@ export class PriceAlertService {
           }
         }
       } catch (error) {
-        console.error(
+        logger.error(
           `Erro ao verificar alertas para ${group.crypto}-${group.targetCurrency}:`,
           error
         );
@@ -568,7 +575,7 @@ export class PriceAlertService {
     try {
       return await this.fetchPriceCallback(crypto, targetCurrency);
     } catch (error) {
-      console.error(
+      logger.error(
         `Erro ao buscar preço para ${crypto}-${targetCurrency}:`,
         error
       );
@@ -620,7 +627,29 @@ export class PriceAlertService {
         },
       });
     } catch (error) {
-      console.error('Erro ao enviar notificação:', error);
+      logger.error('Erro ao enviar notificação:', error);
     }
+  }
+
+  /**
+   * Libera recursos e remove event listeners
+   * @returns {boolean} - Se o serviço foi destruído com sucesso
+   */
+  destroy() {
+    // Para o serviço de verificação
+    this.stop();
+    
+    // Remove o event listener de storage
+    if (typeof window !== 'undefined' && window.removeEventListener && this._boundHandleStorageEvent) {
+      window.removeEventListener('storage', this._boundHandleStorageEvent);
+      this._boundHandleStorageEvent = null;
+    }
+    
+    // Limpa referências
+    this.notificationCallback = null;
+    this.fetchPriceCallback = null;
+    
+    logger.info('Serviço de alertas de preço destruído');
+    return true;
   }
 }

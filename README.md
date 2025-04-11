@@ -13,13 +13,33 @@ Sistema de conversão de criptomoedas com foco no mercado brasileiro, incluindo 
 - Frontend: HTML5, CSS3, JavaScript puro
 - Backend: API RESTful (em desenvolvimento)
 - Hospedagem: Hostinger
+- Build e Bundling: Parcel v2
+- Logging: Winston
 
 ## Configuração do Ambiente de Desenvolvimento
 
 1. Clone o repositório
-2. Abra o projeto no Visual Studio Code
-3. Use a extensão Live Server para desenvolvimento local
-4. Use a extensão SFTP para deploy nos ambientes
+2. Instale as dependências com `npm install`
+3. Execute `npm start` para iniciar o servidor de desenvolvimento local
+4. Execute `npm run build` para gerar a versão de produção
+
+## Documentação
+
+A documentação do projeto está disponível na pasta `docs/`:
+
+- [Guia de Logging](./docs/logging-guide.md) - Guia completo sobre o sistema de logging
+- [Melhorias Implementadas](./docs/melhorias-implementadas.md) - Lista de melhorias recentes
+- [Guia de Event Handlers](./docs/event-handler-guide.md) - Práticas recomendadas para gerenciamento de event handlers
+
+## Scripts Disponíveis
+
+- `npm start` - Inicia o servidor de desenvolvimento
+- `npm run build` - Gera a versão de produção
+- `npm test` - Executa os testes
+- `npm run test:watch` - Executa os testes em modo de observação
+- `npm run test:coverage` - Gera relatório de cobertura de testes
+- `npm run lint` - Verifica o código com ESLint
+- `npm run format` - Formata o código com Prettier
 
 # Configuração do Fluxo de Desenvolvimento
 
@@ -27,7 +47,7 @@ Sistema de conversão de criptomoedas com foco no mercado brasileiro, incluindo 
 
 1. **Desenvolvimento Local**
 
-   - Use o Live Server para desenvolver e testar localmente.
+   - Use o `npm start` para desenvolver e testar localmente.
    - Utilize o Git para controle de versão com commits frequentes.
    - Quando uma funcionalidade estiver pronta, faça upload para o ambiente de desenvolvimento.
 
@@ -99,3 +119,5 @@ git merge --no-ff staging
 - Sistema completo de KYC
 - Integração com múltiplas redes blockchain
 - Cotações em tempo real
+- Logging estruturado e monitoramento
+- Segurança aprimorada

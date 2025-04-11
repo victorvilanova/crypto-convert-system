@@ -2,6 +2,10 @@
  * Módulo de Analytics para rastrear interações do usuário
  * Implementa uma abstração sobre o Google Analytics
  */
+import { getLogger } from '../utils/Logger';
+
+// Criar uma instância de logger específica para Analytics
+const logger = getLogger('Analytics');
 
 /**
  * Classe para gerenciamento de analytics
@@ -31,7 +35,7 @@ export class Analytics {
     if (this.isTrackingAllowed) {
       this._initGoogleAnalytics();
     } else if (this.debug) {
-      console.log('Analytics: Rastreamento desativado devido a preferências do usuário ou Do Not Track');
+      logger.info('Rastreamento desativado devido a preferências do usuário ou Do Not Track');
     }
   }
   
@@ -97,7 +101,7 @@ export class Analytics {
     this._processQueue();
     
     if (this.debug) {
-      console.log('Analytics: Inicializado com sucesso');
+      logger.info('Inicializado com sucesso');
     }
   }
   
@@ -129,7 +133,7 @@ export class Analytics {
     this.queuedEvents = [];
     
     if (this.debug) {
-      console.log('Analytics: Fila de eventos processada');
+      logger.info('Fila de eventos processada');
     }
   }
   
@@ -154,7 +158,7 @@ export class Analytics {
     });
     
     if (this.debug) {
-      console.log('Analytics: Page View', { path, title });
+      logger.info('Page View', { path, title });
     }
   }
   
@@ -185,7 +189,7 @@ export class Analytics {
     window.gtag('event', action, params);
     
     if (this.debug) {
-      console.log('Analytics: Event', { category, action, label, value });
+      logger.info('Event', { category, action, label, value });
     }
   }
   
@@ -216,7 +220,7 @@ export class Analytics {
     window.gtag('event', 'timing_complete', params);
     
     if (this.debug) {
-      console.log('Analytics: Timing', { category, variable, time, label });
+      logger.info('Timing', { category, variable, time, label });
     }
   }
   
@@ -236,7 +240,7 @@ export class Analytics {
     });
     
     if (this.debug) {
-      console.log('Analytics: User ID definido', { userId });
+      logger.info('User ID definido', { userId });
     }
   }
   
@@ -255,7 +259,7 @@ export class Analytics {
     window.gtag('set', 'user_properties', { [name]: value });
     
     if (this.debug) {
-      console.log('Analytics: User Property definida', { name, value });
+      logger.info('User Property definida', { name, value });
     }
   }
   
@@ -284,7 +288,7 @@ export class Analytics {
   endTimeMeasurement(operationName, category, label = null) {
     if (!this._timeMeasurements || !this._timeMeasurements[operationName]) {
       if (this.debug) {
-        console.warn(`Analytics: Nenhuma medição iniciada para "${operationName}"`);
+        logger.warn(`Nenhuma medição iniciada para "${operationName}"`);
       }
       return 0;
     }
@@ -318,7 +322,7 @@ export class Analytics {
     }
     
     if (this.debug) {
-      console.log('Analytics: Rastreamento ' + (allow ? 'ativado' : 'desativado'));
+      logger.info('Rastreamento ' + (allow ? 'ativado' : 'desativado'));
     }
   }
 }

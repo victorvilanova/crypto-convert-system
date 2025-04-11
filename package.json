@@ -21,17 +21,18 @@
   "author": "FastCripto",
   "license": "MIT",
   "devDependencies": {
-    "@babel/core": "^7.18.0",
-    "@babel/preset-env": "^7.18.0",
-    "@testing-library/jest-dom": "^5.16.4",
-    "babel-jest": "^28.1.0",
-    "eslint": "^8.16.0",
-    "jest": "^28.1.0",
-    "jest-environment-jsdom": "^28.1.0",
-    "parcel-bundler": "^1.12.5",
-    "prettier": "^2.6.2"
+    "@babel/core": "^7.23.9",
+    "@babel/preset-env": "^7.23.9",
+    "@testing-library/jest-dom": "^6.4.2",
+    "babel-jest": "^29.7.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "parcel": "^2.11.0",
+    "prettier": "^3.2.5"
   },
   "dependencies": {
-    "core-js": "^3.22.7"
+    "core-js": "^3.35.1",
+    "winston": "^3.11.0"
   }
 }

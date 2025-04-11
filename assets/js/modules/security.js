@@ -193,8 +193,30 @@ function validatePhone() {
   const phoneInput = document.getElementById('kyc-phone');
   const phone = phoneInput.value.replace(/\D/g, '');
 
+  // Validação mais rigorosa para formato brasileiro:
+  // - DDD precisa começar com dígito entre 1-9
+  // - Para celular: 11 dígitos total (com o 9 na frente)
+  // - Para telefone fixo: 10 dígitos total
   if (phone.length < 10 || phone.length > 11) {
     showValidationError(phoneInput, 'Telefone deve ter 10 ou 11 dígitos');
+    return false;
+  }
+  
+  // Verificar se o DDD começa com um dígito válido
+  if (!/^[1-9]/.test(phone)) {
+    showValidationError(phoneInput, 'DDD inválido');
+    return false;
+  }
+  
+  // Se for celular (11 dígitos), o primeiro dígito após DDD deve ser 9
+  if (phone.length === 11 && phone.charAt(2) !== '9') {
+    showValidationError(phoneInput, 'Celular deve começar com 9 após o DDD');
+    return false;
+  }
+  
+  // Padrão final: (XX) XXXXX-XXXX para celular ou (XX) XXXX-XXXX para fixo
+  if (!/^([1-9]{2})(9[0-9]{8}|[1-8][0-9]{7})$/.test(phone)) {
+    showValidationError(phoneInput, 'Formato de telefone inválido');
     return false;
   }
 
@@ -212,13 +234,45 @@ function formatPhone(e) {
   }
 
   if (value.length > 10) {
+    // Formato para celular (11 dígitos)
     input.value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
   } else if (value.length > 6) {
+    // Formato para telefone fixo (10 dígitos) ou celular incompleto
     input.value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
   } else if (value.length > 2) {
+    // Apenas DDD
     input.value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
   } else {
     input.value = value;
+  }
+  
+  // Verificar enquanto digita se o primeiro dígito após DDD é 9 (para celular)
+  if (value.length >= 3 && value.length <= 11) {
+    if (value.length === 11 && value.charAt(2) !== '9') {
+      // Mostrar dica visual
+      input.style.borderColor = '#f59e0b';
+      const parent = input.parentNode;
+      
+      // Verificar se já existe um aviso, se não, criar um
+      let warningElement = parent.querySelector('.phone-warning');
+      if (!warningElement) {
+        warningElement = document.createElement('div');
+        warningElement.className = 'phone-warning';
+        warningElement.style.color = '#f59e0b';
+        warningElement.style.fontSize = '0.8rem';
+        warningElement.style.marginTop = '5px';
+        parent.appendChild(warningElement);
+      }
+      
+      warningElement.textContent = 'Celular deve começar com 9 após o DDD';
+    } else {
+      // Remover a dica visual
+      input.style.borderColor = '';
+      const warningElement = input.parentNode.querySelector('.phone-warning');
+      if (warningElement) {
+        warningElement.remove();
+      }
+    }
   }
 }
 

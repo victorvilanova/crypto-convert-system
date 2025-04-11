@@ -1,6 +1,11 @@
 /**
  * Classe para gerenciamento de configurações do usuário
  */
+import { getLogger } from './Logger';
+
+// Criar uma instância de logger específica para UserSettings
+const logger = getLogger('UserSettings');
+
 export class UserSettings {
   /**
    * @param {Object} options - Opções de configuração
@@ -51,8 +56,30 @@ export class UserSettings {
 
     // Configurar evento de sincronização entre abas
     if (typeof window !== 'undefined' && window.addEventListener) {
-      window.addEventListener('storage', this._handleStorageEvent.bind(this));
+      // Usar uma referência à função bound para facilitar a remoção posterior
+      this._boundHandleStorageEvent = this._handleStorageEvent.bind(this);
+      window.addEventListener('storage', this._boundHandleStorageEvent);
     }
+    
+    logger.info('UserSettings inicializado');
+  }
+
+  /**
+   * Libera recursos e remove event listeners
+   * @returns {boolean} - Se o objeto foi destruído com sucesso
+   */
+  destroy() {
+    // Remove o event listener de storage
+    if (typeof window !== 'undefined' && window.removeEventListener && this._boundHandleStorageEvent) {
+      window.removeEventListener('storage', this._boundHandleStorageEvent);
+      this._boundHandleStorageEvent = null;
+    }
+    
+    // Limpa subscribers
+    this.subscribers.clear();
+    
+    logger.info('UserSettings destruído');
+    return true;
   }
 
   /**
@@ -90,6 +117,8 @@ export class UserSettings {
 
     // Notificar assinantes
     this._notifySubscribers(key, value, oldSettings);
+    
+    logger.debug(`Configuração '${key}' atualizada`, { oldValue: this._getNestedValue(oldSettings, key), newValue: value });
 
     return true;
   }
@@ -120,6 +149,8 @@ export class UserSettings {
 
       // Notificar assinantes
       this._notifySubscribers('multiple', settingsObject, oldSettings);
+      
+      logger.debug('Múltiplas configurações atualizadas', { keys: Object.keys(settingsObject) });
     }
 
     return changed;
@@ -140,6 +171,8 @@ export class UserSettings {
 
     // Notificar assinantes
     this._notifySubscribers('reset', this.settings, oldSettings);
+    
+    logger.info('Configurações resetadas para valores padrão');
 
     return true;
   }
@@ -161,6 +194,8 @@ export class UserSettings {
       callback,
       keys: keys ? (Array.isArray(keys) ? keys : [keys]) : null,
     });
+    
+    logger.debug(`Nova assinatura registrada com ID ${id}`, { keys });
 
     return id;
   }
@@ -171,7 +206,11 @@ export class UserSettings {
    * @returns {boolean} - Se a operação foi bem-sucedida
    */
   unsubscribe(id) {
-    return this.subscribers.delete(id);
+    const result = this.subscribers.delete(id);
+    if (result) {
+      logger.debug(`Assinatura ${id} cancelada`);
+    }
+    return result;
   }
 
   /**
@@ -179,6 +218,7 @@ export class UserSettings {
    * @returns {string} - Configurações em formato JSON
    */
   exportToJSON() {
+    logger.debug('Configurações exportadas para JSON');
     return JSON.stringify(this.settings, null, 2);
   }
 
@@ -195,9 +235,15 @@ export class UserSettings {
         throw new Error('Formato de configurações inválido');
       }
 
-      return this.setMultiple(parsedSettings);
+      const result = this.setMultiple(parsedSettings);
+      
+      if (result) {
+        logger.info('Configurações importadas com sucesso');
+      }
+      
+      return result;
     } catch (error) {
-      console.error('Erro ao importar configurações:', error);
+      logger.error('Erro ao importar configurações:', error);
       return false;
     }
   }
@@ -219,9 +265,12 @@ export class UserSettings {
 
         // Mesclar com as configurações padrão para garantir que novas configurações sejam incluídas
         this.settings = this._deepMerge(this.defaultSettings, parsedSettings);
+        logger.debug('Configurações carregadas do localStorage');
+      } else {
+        logger.debug('Nenhuma configuração encontrada, usando valores padrão');
       }
     } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
+      logger.error('Erro ao carregar configurações:', error);
       // Em caso de erro, usar as configurações padrão
       this.settings = { ...this.defaultSettings };
     }
@@ -238,8 +287,9 @@ export class UserSettings {
       }
 
       localStorage.setItem(this.storageKey, JSON.stringify(this.settings));
+      logger.debug('Configurações salvas no localStorage');
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
+      logger.error('Erro ao salvar configurações:', error);
     }
   }
 
@@ -256,15 +306,17 @@ export class UserSettings {
         if (event.newValue) {
           // Atualizar configurações da memória
           this.settings = JSON.parse(event.newValue);
+          logger.debug('Configurações atualizadas de outra aba');
         } else {
           // Se o valor foi removido, usar padrões
           this.settings = { ...this.defaultSettings };
+          logger.debug('Configurações removidas em outra aba, usando valores padrão');
         }
 
         // Notificar assinantes
         this._notifySubscribers('storage', this.settings, oldSettings);
       } catch (error) {
-        console.error('Erro ao processar mudanças de outra aba:', error);
+        logger.error('Erro ao processar mudanças de outra aba:', error);
       }
     }
   }
@@ -297,7 +349,7 @@ export class UserSettings {
             newSettings: this.settings,
           });
         } catch (error) {
-          console.error('Erro ao notificar assinante:', error);
+          logger.error('Erro ao notificar assinante:', error);
         }
       }
     });

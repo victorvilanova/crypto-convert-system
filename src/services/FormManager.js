@@ -2,6 +2,10 @@
  * FormManager - Gerenciador de formulários com validação
  * Facilita a criação, validação e submissão de formulários
  */
+import { getLogger } from '../utils/Logger';
+
+// Criar uma instância de logger específica para FormManager
+const logger = getLogger('FormManager');
 
 // Tipos de campos suportados
 const FIELD_TYPES = {
@@ -51,8 +55,13 @@ export class FormManager {
     this.isSubmitting = false;
     this.isValid = true;
     
+    // Manter uma lista de event listeners para limpeza posterior
+    this.eventListeners = new Map();
+    
     // Inicializar valores padrão
     this._initializeValues();
+    
+    logger.info('FormManager inicializado');
   }
 
   /**
@@ -68,6 +77,7 @@ export class FormManager {
     });
     
     this._validate();
+    logger.debug('Valores de formulário inicializados');
   }
 
   /**
@@ -124,6 +134,11 @@ export class FormManager {
     });
     
     this.isValid = fieldName ? isValid && this._validateOtherFields(fieldName) : isValid;
+    
+    if (!isValid && fieldName) {
+      logger.debug(`Validação falhou para o campo: ${fieldName}`, { error: this.errors[fieldName] });
+    }
+    
     return this.isValid;
   }
 
@@ -152,7 +167,7 @@ export class FormManager {
    */
   setValue(fieldName, value) {
     if (!this.fields[fieldName]) {
-      console.warn(`Campo "${fieldName}" não definido neste formulário`);
+      logger.warn(`Campo "${fieldName}" não definido neste formulário`);
       return;
     }
     
@@ -170,6 +185,8 @@ export class FormManager {
       errors: { ...this.errors },
       isValid: this.isValid
     });
+    
+    logger.debug(`Valor atualizado para o campo: ${fieldName}`);
   }
 
   /**
@@ -195,6 +212,10 @@ export class FormManager {
         errors: { ...this.errors },
         isValid: this.isValid
       });
+      
+      logger.debug('Múltiplos valores de formulário atualizados', { 
+        fields: Object.keys(newValues) 
+      });
     }
   }
 
@@ -215,6 +236,8 @@ export class FormManager {
       errors: { ...this.errors },
       isValid: this.isValid
     });
+    
+    logger.info('Formulário resetado');
   }
 
   /**
@@ -225,7 +248,15 @@ export class FormManager {
       this.touched[fieldName] = true;
     });
     
-    return this._validate();
+    const isValid = this._validate();
+    
+    if (!isValid) {
+      logger.debug('Validação de todos os campos falhou', { 
+        errors: this.errors 
+      });
+    }
+    
+    return isValid;
   }
 
   /**
@@ -239,6 +270,7 @@ export class FormManager {
     }
     
     this.isSubmitting = true;
+    logger.info('Iniciando submissão de formulário');
     
     // Validar todos os campos
     const isValid = this.validateAll();
@@ -251,20 +283,59 @@ export class FormManager {
         return result
           .then(response => {
             this.isSubmitting = false;
+            logger.info('Submissão de formulário concluída com sucesso');
             return response;
           })
           .catch(error => {
             this.isSubmitting = false;
+            logger.error('Erro na submissão do formulário', error);
             throw error;
           });
       }
       
       this.isSubmitting = false;
+      logger.info('Submissão de formulário concluída');
       return Promise.resolve(result);
     }
     
     this.isSubmitting = false;
+    logger.warn('Submissão de formulário falhou devido a erros de validação', { 
+      errors: this.errors 
+    });
     return Promise.reject(this.errors);
+  }
+
+  /**
+   * Adiciona um event listener e registra para limpeza posterior
+   * @param {HTMLElement} element - Elemento DOM
+   * @param {string} event - Nome do evento
+   * @param {Function} handler - Função handler
+   * @param {Object} [options] - Opções do addEventListener
+   * @returns {string} - Chave para referência
+   */
+  addEventListenerToElement(element, event, handler, options) {
+    if (!element || !event || !handler) return null;
+    
+    const key = `${event}-${Date.now()}`;
+    element.addEventListener(event, handler, options);
+    this.eventListeners.set(key, { element, event, handler, options });
+    
+    return key;
+  }
+
+  /**
+   * Remove um event listener específico
+   * @param {string} key - Chave do event listener
+   */
+  removeEventListener(key) {
+    const listener = this.eventListeners.get(key);
+    if (listener) {
+      const { element, event, handler, options } = listener;
+      if (element) {
+        element.removeEventListener(event, handler, options);
+      }
+      this.eventListeners.delete(key);
+    }
   }
 
   /**
@@ -274,7 +345,7 @@ export class FormManager {
    */
   getFieldProps(fieldName) {
     if (!this.fields[fieldName]) {
-      console.warn(`Campo "${fieldName}" não definido neste formulário`);
+      logger.warn(`Campo "${fieldName}" não definido neste formulário`);
       return {};
     }
     
@@ -361,6 +432,30 @@ export class FormManager {
       isSubmitting: this.isSubmitting,
       isValid: this.isValid
     };
+  }
+  
+  /**
+   * Libera recursos e remove event listeners
+   */
+  destroy() {
+    logger.info('Destruindo FormManager');
+    
+    // Limpar todos os event listeners registrados
+    this.eventListeners.forEach((listener, key) => {
+      this.removeEventListener(key);
+    });
+    
+    // Limpar referências
+    this.onSubmit = null;
+    this.onChange = null;
+    
+    // Manter uma referência aos campos para debugging, mas limpar dados sensíveis
+    this.values = {};
+    this.errors = {};
+    this.touched = {};
+    
+    logger.info('FormManager destruído com sucesso');
+    return true;
   }
 }
 

@@ -2,11 +2,13 @@
  * Níveis de log disponíveis
  * @enum {string}
  */
+import winston from 'winston';
+
 export const LogLevel = {
-  DEBUG: 'DEBUG',
-  INFO: 'INFO',
-  WARN: 'WARN',
-  ERROR: 'ERROR',
+  DEBUG: 'debug',
+  INFO: 'info',
+  WARN: 'warn',
+  ERROR: 'error',
 };
 
 /**
@@ -20,7 +22,38 @@ export class Logger {
     this.module = module;
     // Define o nível mínimo de log baseado no ambiente
     this.minLevel =
-      CONFIG.environment === 'production' ? LogLevel.INFO : LogLevel.DEBUG;
+      CONFIG && CONFIG.environment === 'production' ? LogLevel.INFO : LogLevel.DEBUG;
+    
+    // Configuração do Winston logger
+    this.logger = winston.createLogger({
+      level: this.minLevel,
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      ),
+      defaultMeta: { module },
+      transports: [
+        // Escreve todos os logs para o console
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.printf(({ timestamp, level, message, module, data }) => {
+              let log = `${timestamp} [${level}] [${module}]: ${message}`;
+              if (data) {
+                log += ` | ${JSON.stringify(data)}`;
+              }
+              return log;
+            })
+          ),
+        }),
+      ],
+    });
+    
+    // Adiciona transporte para erros em produção
+    if (CONFIG && CONFIG.environment === 'production') {
+      // Aqui poderia adicionar transporte para um serviço de logs externo
+      // como Sentry, LogRocket, etc.
+    }
   }
 
   /**
@@ -31,83 +64,7 @@ export class Logger {
    * @private
    */
   _log(level, message, data) {
-    // Se o nível for menor que o mínimo configurado, não registra
-    if (!this._shouldLog(level)) return;
-
-    const timestamp = new Date().toISOString();
-    const logObject = {
-      timestamp,
-      level,
-      module: this.module,
-      message,
-    };
-
-    if (data) {
-      logObject.data = data;
-    }
-
-    // Determina o método de console baseado no nível
-    if (level === LogLevel.ERROR) {
-      console.error(this._formatLog(logObject));
-      this._sendToMonitoring(logObject); // Em produção enviaria para um serviço externo
-    } else if (level === LogLevel.WARN) {
-      console.warn(this._formatLog(logObject));
-    } else if (level === LogLevel.INFO) {
-      console.info(this._formatLog(logObject));
-    } else {
-      console.debug(this._formatLog(logObject));
-    }
-  }
-
-  /**
-   * Verifica se um determinado nível deve ser registrado
-   * @param {LogLevel} level - Nível a verificar
-   * @returns {boolean} - Se o nível deve ser registrado
-   * @private
-   */
-  _shouldLog(level) {
-    const levels = Object.values(LogLevel);
-    const minLevelIndex = levels.indexOf(this.minLevel);
-    const currentLevelIndex = levels.indexOf(level);
-
-    return currentLevelIndex >= minLevelIndex;
-  }
-
-  /**
-   * Formata um objeto de log para exibição
-   * @param {Object} logObject - Objeto de log a ser formatado
-   * @returns {string} - Log formatado
-   * @private
-   */
-  _formatLog(logObject) {
-    if (CONFIG.debugMode) {
-      // Em modo de debug, mostra o log completo formatado
-      return JSON.stringify(logObject, null, 2);
-    }
-
-    return JSON.stringify(logObject);
-  }
-
-  /**
-   * Envia logs de erro para um serviço de monitoramento externo
-   * @param {Object} logObject - Objeto de log a ser enviado
-   * @private
-   */
-  _sendToMonitoring(logObject) {
-    // Implementação para enviar logs para um serviço externo
-    // Somente em produção para evitar custos desnecessários
-    if (CONFIG.environment === 'production' && typeof window !== 'undefined') {
-      // Exemplo simples usando navigator.sendBeacon para não bloquear a thread principal
-      try {
-        const endpoint = 'https://api.fastcripto.com/log';
-        const blob = new Blob([JSON.stringify(logObject)], {
-          type: 'application/json',
-        });
-        navigator.sendBeacon(endpoint, blob);
-      } catch (error) {
-        console.error('Falha ao enviar log para monitoramento:', error);
-      }
-    }
+    this.logger.log(level, message, { data });
   }
 
   /**
@@ -158,4 +115,12 @@ export class Logger {
 
     this._log(LogLevel.ERROR, message, errorData);
   }
+}
+
+// Exportando uma instância para uso global
+export const logger = new Logger('app');
+
+// Função auxiliar para criar instâncias de logger específicas para cada módulo
+export function getLogger(module) {
+  return new Logger(module);
 }

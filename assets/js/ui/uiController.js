@@ -12,7 +12,14 @@ const messageContainer = document.getElementById('message');
 
 // Importando o serviço de taxas
 import { calculateAllFeesAndTaxes } from '../services/taxesService.js';
-import { verifyKYCForTransaction, startKYCUpgrade, KYC_LEVELS } from '../services/kycService.js';
+import { 
+    verifyKYCForTransaction, 
+    startKYCUpgrade, 
+    KYC_LEVELS, 
+    KYC_LIMITS,
+    simulateKYCUpgrade,
+    getLevelName
+} from '../services/kycService.js';
 import { 
     validateWalletAddress, 
     getSupportedNetworks, 
@@ -164,22 +171,24 @@ function displayResult(fromCurrency, toCrypto, amount, result) {
         
         // Verificar KYC
         const kycResult = verifyKYCForTransaction(amount);
-        if (!kycResult.approved) {
-            resultHTML += `
-                <div class="alert alert-warning mt-3">
-                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Verificação KYC Necessária</h5>
-                    <p>${kycResult.reason}</p>
-                    <p>Seu limite atual é de ${kycResult.limit.toLocaleString('pt-BR', { 
-                        style: 'currency', 
-                        currency: 'BRL'
-                    })}</p>
-                    <button id="upgradeKycBtn" class="btn btn-warning" 
-                        data-level="${kycResult.requiredLevel}">
-                        Aumentar Nível de Verificação
-                    </button>
-                </div>
-            `;
-        }
+        console.log("Resultado da verificação KYC:", kycResult); // Debug KYC
+        
+        // Sempre adicionar o botão de KYC para testes e garantir visibilidade
+        resultHTML += `
+            <div class="alert alert-warning mt-3">
+                <h5><i class="fas fa-exclamation-triangle me-2"></i>Verificação KYC Necessária</h5>
+                <p>${kycResult.approved ? 'Você já possui verificação, mas pode aumentar seu nível.' : kycResult.reason}</p>
+                <p>Seu limite atual é de ${(kycResult.limit || 0).toLocaleString('pt-BR', { 
+                    style: 'currency', 
+                    currency: 'BRL'
+                })}</p>
+                <button id="upgradeKycBtn" class="btn btn-warning btn-lg w-100 mt-2" 
+                    data-level="${kycResult.requiredLevel || 1}" 
+                    style="font-size: 18px; padding: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); border: 2px solid #ff9800; position: relative; z-index: 100;">
+                    <i class="fas fa-user-shield me-2"></i>Verificar Identidade e Aumentar Limite
+                </button>
+            </div>
+        `;
     }
     
     resultHTML += `</div>`;
@@ -193,10 +202,14 @@ function displayResult(fromCurrency, toCrypto, amount, result) {
     
     const upgradeKycBtn = document.getElementById('upgradeKycBtn');
     if (upgradeKycBtn) {
+        console.log("Botão KYC encontrado e configurado"); // Debug KYC
         upgradeKycBtn.addEventListener('click', () => {
             const targetLevel = parseInt(upgradeKycBtn.getAttribute('data-level'));
+            console.log("Iniciando upgrade KYC para nível:", targetLevel); // Debug KYC
             handleKycUpgrade(targetLevel);
         });
+    } else {
+        console.error("Botão KYC não encontrado no DOM!"); // Debug KYC
     }
 }
 
@@ -452,7 +465,8 @@ function showWalletForm(fromCurrency, toCrypto, amount, finalAmount, defaultNetw
     if (fromCurrency === 'BRL') {
         const kycResult = verifyKYCForTransaction(amount);
         if (!kycResult.approved) {
-            showError(`Não é possível completar a transação: ${kycResult.reason}`);
+            // Em vez de mostrar um erro, iniciamos diretamente o processo de upgrade KYC
+            handleKycUpgrade(kycResult.requiredLevel);
             return;
         }
     }
@@ -649,7 +663,8 @@ function handleConfirmTransaction(fromCurrency, toCrypto, amount, finalAmount) {
     if (fromCurrency === 'BRL') {
         const kycResult = verifyKYCForTransaction(amount);
         if (!kycResult.approved) {
-            showError(`Não é possível completar a transação: ${kycResult.reason}`);
+            // Em vez de mostrar um erro, iniciamos diretamente o processo de upgrade KYC
+            handleKycUpgrade(kycResult.requiredLevel);
             return;
         }
     }
@@ -687,15 +702,164 @@ function handleKycUpgrade(targetLevel) {
     const upgradeResult = startKYCUpgrade(targetLevel);
     
     if (upgradeResult.success) {
-        // Exibir modal de instruções para o upgrade
-        showMessage(`
-            <h5>Processo de Verificação Iniciado</h5>
-            <p>Para completar sua verificação, você precisará enviar os seguintes documentos:</p>
-            <ul>
-                ${upgradeResult.requiredDocuments.map(doc => `<li>${doc}</li>`).join('')}
-            </ul>
-            <p><strong>Próximos passos:</strong> ${upgradeResult.nextSteps}</p>
-        `, 'info', 0);  // 0 para não desaparecer automaticamente
+        // Em vez de apenas mostrar uma mensagem, agora exibimos o formulário KYC completo
+        const requiredDocs = upgradeResult.requiredDocuments;
+        
+        // Preparar o formulário KYC com documentos específicos para o nível
+        const kycFormHTML = `
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Verificação KYC (Know Your Customer)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading">Aumente seu limite de transação</h6>
+                        <p>Complete esta verificação para aumentar seu limite e continuar sua transação.</p>
+                        <p><strong>Nível desejado:</strong> ${getLevelName(targetLevel)}</p>
+                    </div>
+                    
+                    <h6 class="mb-3">Para confirmar seu upgrade, precisamos verificar sua identidade:</h6>
+                    
+                    <form id="kycForm">
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Nome Completo</label>
+                            <input type="text" class="form-control" id="fullName" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cpf" class="form-label">CPF</label>
+                            <input type="text" class="form-control" id="cpf" placeholder="000.000.000-00" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="dateOfBirth" class="form-label">Data de Nascimento</label>
+                            <input type="date" class="form-control" id="dateOfBirth" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phoneNumber" class="form-label">Telefone</label>
+                            <input type="tel" class="form-control" id="phoneNumber" placeholder="(00) 00000-0000" required>
+                        </div>
+                        
+                        ${requiredDocs.includes('RG/CNH') ? `
+                        <div class="mb-3">
+                            <label class="form-label">Documento de Identidade</label>
+                            <div class="input-group mb-3">
+                                <input type="file" class="form-control" id="idDocument" required>
+                                <label class="input-group-text" for="idDocument">RG ou CNH (frente)</label>
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${requiredDocs.includes('Selfie com documento') ? `
+                        <div class="mb-3">
+                            <label class="form-label">Selfie com Documento</label>
+                            <div class="input-group mb-3">
+                                <input type="file" class="form-control" id="selfieWithDocument" required>
+                                <label class="input-group-text" for="selfieWithDocument">Selfie</label>
+                            </div>
+                            <div class="form-text">Tire uma selfie segurando seu documento de identidade.</div>
+                        </div>
+                        ` : ''}
+                        
+                        ${requiredDocs.includes('Comprovante de Residência') ? `
+                        <div class="mb-3">
+                            <label class="form-label">Comprovante de Residência</label>
+                            <div class="input-group mb-3">
+                                <input type="file" class="form-control" id="addressProof" required>
+                                <label class="input-group-text" for="addressProof">Comprovante</label>
+                            </div>
+                            <div class="form-text">Conta de água, luz ou telefone (últimos 3 meses).</div>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="termsAccepted" required>
+                            <label class="form-check-label" for="termsAccepted">
+                                Eu concordo com os <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Termos e Condições</a> e confirmo que todas as informações são verdadeiras.
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-user-check me-2"></i>Enviar Verificação e Prosseguir
+                            </button>
+                            <button type="button" id="cancelKycBtn" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        // Exibir o formulário KYC no container de resultados
+        resultContainer.innerHTML = kycFormHTML;
+        
+        // Adicionar evento de submissão do formulário
+        const kycForm = document.getElementById('kycForm');
+        if (kycForm) {
+            kycForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // Simulação de submissão do KYC
+                showLoading();
+                
+                setTimeout(() => {
+                    hideLoading();
+                    
+                    // Simular upgrade de nível KYC
+                    simulateKYCUpgrade(targetLevel);
+                    
+                    // Mostrar mensagem de sucesso
+                    showMessage(`
+                        <h5><i class="fas fa-check-circle me-2"></i>Verificação Concluída!</h5>
+                        <p>Seu nível KYC foi atualizado com sucesso para ${getLevelName(targetLevel)}.</p>
+                        <p>Você agora pode realizar transações até o valor de ${KYC_LIMITS[targetLevel].toLocaleString('pt-BR', { 
+                            style: 'currency', 
+                            currency: 'BRL'
+                        })}</p>
+                    `, 'success', 5000);
+                    
+                    // Verificar se há uma transação pendente e retomar o fluxo
+                    const pendingForm = document.getElementById('converterForm');
+                    if (pendingForm) {
+                        // Extrair os valores do formulário, se disponíveis
+                        const fromCurrencyValue = document.getElementById('fromCurrency')?.value;
+                        const toCryptoValue = document.getElementById('toCrypto')?.value;
+                        const amountValue = document.getElementById('amount')?.value;
+                        
+                        if (fromCurrencyValue && toCryptoValue && amountValue) {
+                            // Recalcular o resultado com os novos limites KYC
+                            const amount = parseFloat(amountValue);
+                            const rate = 1; // Aqui você obteria a taxa real de conversão
+                            const result = amount * rate;
+                            
+                            // Mostrar o resultado da conversão novamente
+                            displayResult(fromCurrencyValue, toCryptoValue, amount, result);
+                        } else {
+                            // Resetar o formulário se não houver valores completos
+                            pendingForm.reset();
+                            resultContainer.style.display = 'none';
+                        }
+                    } else {
+                        // Resetar a interface se não tiver formulário pendente
+                        resultContainer.style.display = 'none';
+                    }
+                    
+                }, 3000);
+            });
+        }
+        
+        // Botão cancelar
+        const cancelKycBtn = document.getElementById('cancelKycBtn');
+        if (cancelKycBtn) {
+            cancelKycBtn.addEventListener('click', () => {
+                // Voltar para a tela anterior
+                document.getElementById('converterForm')?.reset();
+                resultContainer.style.display = 'none';
+            });
+        }
     } else {
         showMessage(upgradeResult.message, 'warning');
     }
@@ -817,11 +981,58 @@ function updateUIWithRates(rates, showAll = false) {
     });
 }
 
+/**
+ * Mostra um botão de KYC diretamente na interface para garantir acesso em qualquer momento
+ * Esta função adiciona um botão flutuante para iniciar o processo de KYC
+ */
+function displayFloatingKycButton() {
+    // Remover botão existente se houver
+    const existingBtn = document.getElementById('floatingKycBtn');
+    if (existingBtn) {
+        existingBtn.remove();
+    }
+    
+    // Criar botão flutuante
+    const kycBtn = document.createElement('button');
+    kycBtn.id = 'floatingKycBtn';
+    kycBtn.className = 'btn btn-warning btn-lg';
+    kycBtn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        font-weight: bold;
+        border: 2px solid #ff9800;
+    `;
+    kycBtn.innerHTML = '<i class="fas fa-user-shield me-2"></i>Verificar Identidade (KYC)';
+    
+    // Adicionar evento de clique
+    kycBtn.addEventListener('click', () => {
+        // Sempre iniciar no nível mais alto disponível
+        handleKycUpgrade(KYC_LEVELS.TIER2);
+    });
+    
+    // Adicionar à página
+    document.body.appendChild(kycBtn);
+    
+    console.log("Botão flutuante de KYC adicionado à interface");
+}
+
+// Chamar esta função no carregamento da página
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar botão de KYC flutuante para garantir acesso fácil
+    setTimeout(displayFloatingKycButton, 1000);
+});
+
 export {
     showLoading,
     hideLoading,
     showError,
     displayResult,
     showMessage,
-    updateUIWithRates
+    updateUIWithRates,
+    displayFloatingKycButton
 };

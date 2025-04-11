@@ -1,6 +1,16 @@
 /**
  * Utilitários para otimização em dispositivos móveis
  */
+import { getLogger } from './Logger';
+
+// Criar uma instância de logger específica para MobileOptimizer
+const logger = getLogger('MobileOptimizer');
+
+// Referências para event listeners para facilitar a remoção
+let orientationChangeListener = null;
+let mediaQueryListener = null;
+let touchStartListener = null;
+let touchEndListener = null;
 
 // Detecta o tipo de dispositivo
 export function detectDevice() {
@@ -42,9 +52,17 @@ export function setupResponsiveUI() {
     optimizeForMobile();
   }
   
+  // Limpar listeners existentes antes de adicionar novos
+  cleanup();
+  
   // Monitorar mudanças de orientação
-  window.addEventListener('orientationchange', handleOrientationChange);
-  window.matchMedia("(orientation: portrait)").addEventListener('change', handleOrientationChange);
+  orientationChangeListener = handleOrientationChange;
+  mediaQueryListener = handleOrientationChange;
+  
+  window.addEventListener('orientationchange', orientationChangeListener);
+  window.matchMedia("(orientation: portrait)").addEventListener('change', mediaQueryListener);
+  
+  logger.info(`Interface configurada para dispositivo ${device} em orientação ${orientation}`);
 }
 
 // Otimiza para dispositivos móveis
@@ -59,6 +77,8 @@ function optimizeForMobile() {
   
   // Otimizar formulários para mobile
   optimizeForms();
+  
+  logger.info('Otimizações para dispositivos móveis aplicadas');
 }
 
 // Lidar com mudanças de orientação
@@ -75,6 +95,8 @@ function handleOrientationChange() {
   window.dispatchEvent(new CustomEvent('layoutchange', { 
     detail: { orientation }
   }));
+  
+  logger.debug(`Orientação alterada para ${orientation}`);
 }
 
 // Configurar gestos de toque
@@ -85,17 +107,31 @@ function setupTouchGestures() {
   let touchEndX = 0;
   let touchEndY = 0;
   
+  // Remover event listeners existentes
+  if (touchStartListener) {
+    document.removeEventListener('touchstart', touchStartListener);
+  }
+  
+  if (touchEndListener) {
+    document.removeEventListener('touchend', touchEndListener);
+  }
+  
   // Configurar eventos de toque
-  document.addEventListener('touchstart', function(event) {
+  touchStartListener = function(event) {
     touchStartX = event.changedTouches[0].screenX;
     touchStartY = event.changedTouches[0].screenY;
-  }, false);
+  };
   
-  document.addEventListener('touchend', function(event) {
+  touchEndListener = function(event) {
     touchEndX = event.changedTouches[0].screenX;
     touchEndY = event.changedTouches[0].screenY;
     handleGesture();
-  }, false);
+  };
+  
+  document.addEventListener('touchstart', touchStartListener, false);
+  document.addEventListener('touchend', touchEndListener, false);
+  
+  logger.debug('Suporte a gestos de toque configurado');
   
   // Interpretar o gesto
   function handleGesture() {
@@ -113,6 +149,8 @@ function setupTouchGestures() {
         document.dispatchEvent(new CustomEvent('swipe', { 
           detail: { direction, distance: Math.abs(distanceX) }
         }));
+        
+        logger.debug(`Swipe ${direction} detectado`);
       }
     } else {
       if (Math.abs(distanceY) > minDistance) {
@@ -121,6 +159,8 @@ function setupTouchGestures() {
         document.dispatchEvent(new CustomEvent('swipe', { 
           detail: { direction, distance: Math.abs(distanceY) }
         }));
+        
+        logger.debug(`Swipe ${direction} detectado`);
       }
     }
   }
@@ -159,6 +199,8 @@ function optimizeForms() {
       metaViewport.setAttribute('content', `${content}, maximum-scale=1, user-scalable=0`);
     }
   }
+  
+  logger.debug('Formulários otimizados para dispositivos móveis');
 }
 
 // Auto-ajuste para dispositivos de alta resolução (Retina)
@@ -173,11 +215,15 @@ export function setupHighDpiSupport() {
         img.setAttribute('src', highResUrl);
       }
     });
+    
+    logger.info(`Suporte para tela de alta resolução configurado (${window.devicePixelRatio}x)`);
   }
 }
 
 // Inicialização
 export function initMobileOptimizations() {
+  logger.info('Inicializando otimizações para dispositivos móveis');
+  
   setupResponsiveUI();
   setupHighDpiSupport();
   
@@ -217,11 +263,40 @@ export function initMobileOptimizations() {
   
   document.head.appendChild(style);
   
-  return {
+  const info = {
     device: detectDevice(),
     orientation: detectOrientation(),
     highDpi: window.devicePixelRatio > 1
   };
+  
+  logger.debug('Informações do dispositivo', info);
+  
+  return info;
+}
+
+// Limpar resources e event listeners
+export function cleanup() {
+  logger.debug('Limpando event listeners de MobileOptimizer');
+  
+  if (orientationChangeListener) {
+    window.removeEventListener('orientationchange', orientationChangeListener);
+    orientationChangeListener = null;
+  }
+  
+  if (mediaQueryListener) {
+    window.matchMedia("(orientation: portrait)").removeEventListener('change', mediaQueryListener);
+    mediaQueryListener = null;
+  }
+  
+  if (touchStartListener) {
+    document.removeEventListener('touchstart', touchStartListener);
+    touchStartListener = null;
+  }
+  
+  if (touchEndListener) {
+    document.removeEventListener('touchend', touchEndListener);
+    touchEndListener = null;
+  }
 }
 
 export default {
@@ -229,5 +304,6 @@ export default {
   detectOrientation,
   setupResponsiveUI,
   setupHighDpiSupport,
-  initMobileOptimizations
+  initMobileOptimizations,
+  cleanup
 };

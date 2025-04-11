@@ -64,6 +64,26 @@
       </div>
     </header>
 
+    <!-- Adicionar depois do header, antes do conteúdo principal -->
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i>Verificação KYC Necessária</h5>
+                            <p class="mb-0">Verifique sua identidade para aumentar seus limites de transação</p>
+                        </div>
+                        <button id="mainKycBtn" class="btn btn-warning btn-lg" 
+                                style="font-size: 18px; padding: 12px 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); border: 2px solid #ff9800;">
+                            <i class="fas fa-user-shield me-2"></i>Fazer Verificação KYC
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Conteúdo Principal -->
     <main>
       <div class="container">
@@ -117,174 +137,240 @@
             <div id="rates-loader" class="rates-loader"></div>
           </div>
 
-          <!-- Calculadora de conversão -->
-          <div class="conversion-card">
-            <div class="conversion-steps">
-              <div class="step active">1. Valor e Moeda</div>
-              <div class="step">2. Revisão</div>
-              <div class="step">3. Pagamento</div>
+          <!-- Navegação de etapas -->
+          <div class="conversion-steps">
+            <div class="step active" data-step="valor-moeda">1. Valor e Moeda</div>
+            <div class="step" data-step="revisao">2. Revisão</div>
+            <div class="step" data-step="pagamento">3. Pagamento</div>
+          </div>
+
+          <!-- Container de subabas -->
+          <div class="converter-steps-container">
+            <!-- Etapa 1: Valor e Moeda -->
+            <div id="step-valor-moeda" class="conversion-step active">
+              <div class="conversion-card">
+                <form id="conversion-form">
+                  <div class="form-group">
+                    <label for="brl-amount">Valor em Reais (R$)</label>
+                    <input
+                      type="number"
+                      id="brl-amount"
+                      min="100"
+                      step="10"
+                      placeholder="0,00"
+                    />
+                    <small>Valor mínimo: R$ 100,00</small>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Criptomoeda</label>
+                    <div class="crypto-options">
+                      <label class="crypto-option">
+                        <input
+                          type="radio"
+                          name="crypto-currency"
+                          value="BTC"
+                        />
+                        <div class="crypto-icon">
+                          <i class="bi bi-currency-bitcoin"></i>
+                        </div>
+                        <div class="crypto-name">Bitcoin</div>
+                        <div class="crypto-ticker">BTC</div>
+                      </label>
+
+                      <label class="crypto-option">
+                        <input type="radio" name="crypto-currency" value="ETH" />
+                        <div class="crypto-icon">
+                          <i class="bi bi-diagram-3"></i>
+                        </div>
+                        <div class="crypto-name">Ethereum</div>
+                        <div class="crypto-ticker">ETH</div>
+                      </label>
+
+                      <label class="crypto-option">
+                        <input type="radio" name="crypto-currency" value="USDT" checked />
+                        <div class="crypto-icon">
+                          <i class="bi bi-cash-coin"></i>
+                        </div>
+                        <div class="crypto-name">Tether</div>
+                        <div class="crypto-ticker">USDT</div>
+                      </label>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3" style="font-size: 0.9rem; padding: 10px; border-radius: 6px; background-color: #e7f5ff; border-left: 4px solid #4c6ef5;">
+                      <i class="bi bi-info-circle-fill me-2"></i>
+                      <strong>USDT:</strong> Utilizamos a rede TRON (TRC20) para transações USDT por sua velocidade e baixo custo.
+                    </div>
+                  </div>
+
+                  <div class="form-actions">
+                    <button type="button" id="btn-calculate" class="btn primary">
+                      Calcular e Prosseguir
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
 
-            <form id="conversion-form">
-              <div class="form-group">
-                <label for="brl-amount">Valor em Reais (R$)</label>
-                <input
-                  type="number"
-                  id="brl-amount"
-                  min="100"
-                  step="10"
-                  placeholder="0,00"
-                />
-                <small>Valor mínimo: R$ 100,00</small>
-              </div>
+            <!-- Etapa 2: Revisão -->
+            <div id="step-revisao" class="conversion-step">
+              <div class="conversion-card">
+                <!-- Resultado da conversão -->
+                <div id="conversion-result" class="conversion-result">
+                  <h3>Resultado da Conversão</h3>
 
-              <div class="form-group">
-                <label>Criptomoeda</label>
-                <div class="crypto-options">
-                  <label class="crypto-option">
-                    <input
-                      type="radio"
-                      name="crypto-currency"
-                      value="BTC"
-                      checked
-                    />
-                    <div class="crypto-icon">
-                      <i class="bi bi-currency-bitcoin"></i>
+                  <div class="result-row">
+                    <div class="result-label">Valor em Reais:</div>
+                    <div class="result-value" id="result-brl-amount">R$ 0,00</div>
+                  </div>
+
+                  <div class="result-row">
+                    <div class="result-label">IOF (0,38%):</div>
+                    <div class="result-value" id="result-iof">- R$ 0,00</div>
+                  </div>
+
+                  <div class="result-row">
+                    <div class="result-label">Taxa de Serviço (6%):</div>
+                    <div class="result-value" id="result-service-fee">
+                      - R$ 0,00
                     </div>
-                    <div class="crypto-name">Bitcoin</div>
-                    <div class="crypto-ticker">BTC</div>
-                  </label>
+                  </div>
 
-                  <label class="crypto-option">
-                    <input type="radio" name="crypto-currency" value="ETH" />
-                    <div class="crypto-icon">
-                      <i class="bi bi-diagram-3"></i>
+                  <div class="result-row">
+                    <div class="result-label">Taxa da Rede:</div>
+                    <div class="result-value" id="result-network-fee">- 0.00</div>
+                  </div>
+
+                  <div class="result-row total">
+                    <div class="result-label">Valor Líquido:</div>
+                    <div class="result-value" id="result-net-amount">R$ 0,00</div>
+                  </div>
+
+                  <div class="result-row rate-info">
+                    <div class="result-label">Cotação Utilizada:</div>
+                    <div class="result-value" id="result-rate">R$ 0,00</div>
+                  </div>
+
+                  <div class="result-row crypto-result">
+                    <div class="result-label">Valor Final em Cripto:</div>
+                    <div class="result-value" id="result-crypto-amount">
+                      0.00000000 BTC
                     </div>
-                    <div class="crypto-name">Ethereum</div>
-                    <div class="crypto-ticker">ETH</div>
-                  </label>
-
-                  <label class="crypto-option">
-                    <input type="radio" name="crypto-currency" value="USDT" />
-                    <div class="crypto-icon">
-                      <i class="bi bi-cash-coin"></i>
-                    </div>
-                    <div class="crypto-name">Tether</div>
-                    <div class="crypto-ticker">USDT</div>
-                  </label>
+                  </div>
                 </div>
-              </div>
 
-              <div class="form-group">
-                <label>Rede</label>
-                <div class="network-options">
-                  <label class="network-option">
-                    <input
-                      type="radio"
-                      name="network"
-                      value="BTC"
-                      class="network-btc"
-                      checked
-                    />
-                    <span>Bitcoin</span>
-                  </label>
-
-                  <label class="network-option">
-                    <input
-                      type="radio"
-                      name="network"
-                      value="ETH"
-                      class="network-eth"
-                    />
-                    <span>Ethereum</span>
-                  </label>
-
-                  <label class="network-option">
-                    <input
-                      type="radio"
-                      name="network"
-                      value="BSC"
-                      class="network-bsc"
-                    />
-                    <span>BSC</span>
-                  </label>
-
-                  <label class="network-option">
-                    <input
-                      type="radio"
-                      name="network"
-                      value="TRON"
-                      class="network-tron"
-                    />
-                    <span>TRON</span>
-                  </label>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="wallet-address">Endereço da Carteira</label>
-                <input
-                  type="text"
-                  id="wallet-address"
-                  placeholder="Endereço da sua carteira de criptomoedas"
-                />
-              </div>
-
-              <div class="form-actions">
-                <button type="button" id="btn-calculate" class="btn primary">
-                  Calcular
-                </button>
-              </div>
-            </form>
-
-            <!-- Resultado da conversão (inicialmente escondido) -->
-            <div id="conversion-result" class="conversion-result hidden">
-              <h3>Resultado da Conversão</h3>
-
-              <div class="result-row">
-                <div class="result-label">Valor em Reais:</div>
-                <div class="result-value" id="result-brl-amount">R$ 0,00</div>
-              </div>
-
-              <div class="result-row">
-                <div class="result-label">IOF (0,38%):</div>
-                <div class="result-value" id="result-iof">- R$ 0,00</div>
-              </div>
-
-              <div class="result-row">
-                <div class="result-label">Taxa de Serviço (6%):</div>
-                <div class="result-value" id="result-service-fee">
-                  - R$ 0,00
-                </div>
-              </div>
-
-              <div class="result-row">
-                <div class="result-label">Taxa da Rede:</div>
-                <div class="result-value" id="result-network-fee">- 0.00</div>
-              </div>
-
-              <div class="result-row total">
-                <div class="result-label">Valor Líquido:</div>
-                <div class="result-value" id="result-net-amount">R$ 0,00</div>
-              </div>
-
-              <div class="result-row rate-info">
-                <div class="result-label">Cotação Utilizada:</div>
-                <div class="result-value" id="result-rate">R$ 0,00</div>
-              </div>
-
-              <div class="result-row crypto-result">
-                <div class="result-label">Valor Final em Cripto:</div>
-                <div class="result-value" id="result-crypto-amount">
-                  0.00000000 BTC
+                <div class="form-actions d-flex justify-content-between">
+                  <button type="button" id="btn-back-to-step1" class="btn secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                  </button>
+                  <button type="button" id="btn-proceed-to-step3" class="btn primary">
+                    Prosseguir <i class="bi bi-arrow-right"></i>
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div class="form-actions hidden" id="btn-proceed-container">
-              <button type="button" id="btn-proceed" class="btn primary">
-                Prosseguir
-              </button>
+            <!-- Etapa 3: Pagamento/Endereço -->
+            <div id="step-pagamento" class="conversion-step">
+              <div class="conversion-card">
+                <h3><i class="bi bi-wallet2"></i> Informações da Carteira</h3>
+                <p>Informe a rede e o endereço da sua carteira para receber os valores.</p>
+
+                <form id="wallet-form">
+                  <div class="form-group">
+                    <label>Rede Blockchain</label>
+                    <div class="network-options" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
+                      <label class="network-option" style="display: flex; align-items: center; padding: 12px 15px; border: 2px solid #e9ecef; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; min-width: 120px;">
+                        <input
+                          type="radio"
+                          name="network"
+                          value="BTC"
+                          class="network-btc"
+                          checked
+                          style="margin-right: 10px;"
+                        />
+                        <span style="font-weight: 500;"><i class="bi bi-currency-bitcoin" style="color: #f7931a; margin-right: 5px;"></i>Bitcoin</span>
+                      </label>
+
+                      <label class="network-option" style="display: flex; align-items: center; padding: 12px 15px; border: 2px solid #e9ecef; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; min-width: 120px;">
+                        <input
+                          type="radio"
+                          name="network"
+                          value="ETH"
+                          class="network-eth"
+                          style="margin-right: 10px;"
+                        />
+                        <span style="font-weight: 500;"><i class="bi bi-currency-exchange" style="color: #627eea; margin-right: 5px;"></i>Ethereum</span>
+                      </label>
+
+                      <label class="network-option" style="display: flex; align-items: center; padding: 12px 15px; border: 2px solid #e9ecef; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; min-width: 120px;">
+                        <input
+                          type="radio"
+                          name="network"
+                          value="BSC"
+                          class="network-bsc"
+                          style="margin-right: 10px;"
+                        />
+                        <span style="font-weight: 500;"><i class="bi bi-grid" style="color: #f3ba2f; margin-right: 5px;"></i>BSC</span>
+                      </label>
+
+                      <label class="network-option" style="display: flex; align-items: center; padding: 12px 15px; border: 2px solid #e9ecef; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; min-width: 120px;">
+                        <input
+                          type="radio"
+                          name="network"
+                          value="TRON"
+                          class="network-tron"
+                          style="margin-right: 10px;"
+                        />
+                        <span style="font-weight: 500;"><i class="bi bi-heptagon" style="color: #ff060a; margin-right: 5px;"></i>TRON</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-top: 25px;">
+                    <label for="wallet-address" style="display: block; margin-bottom: 10px; font-weight: 600;">
+                      <i class="bi bi-shield-check" style="color: #4c6ef5; margin-right: 5px;"></i>Endereço da Carteira
+                    </label>
+                    <div style="position: relative;">
+                      <input
+                        type="text"
+                        id="wallet-address"
+                        placeholder="Endereço da sua carteira de criptomoedas"
+                        style="width: 100%; padding: 15px; border: 2px solid #ced4da; border-radius: 8px; font-size: 16px; font-family: monospace; transition: all 0.3s ease;"
+                      />
+                      <div style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: flex; gap: 10px;">
+                        <button type="button" style="background: none; border: none; color: #4c6ef5; cursor: pointer; font-size: 18px;" title="Colar da área de transferência">
+                          <i class="bi bi-clipboard"></i>
+                        </button>
+                        <button type="button" style="background: none; border: none; color: #4c6ef5; cursor: pointer; font-size: 18px;" title="Verificar endereço">
+                          <i class="bi bi-check-circle"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div id="wallet-address-warning" style="display: none; margin-top: 10px; font-size: 14px;">
+                      <i class="bi bi-exclamation-triangle"></i>
+                      Verifique com atenção o endereço da carteira. Transações enviadas para endereços incorretos não podem ser recuperadas.
+                    </div>
+                  </div>
+
+                  <div class="form-check mb-3" style="margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #4c6ef5;">
+                    <input class="form-check-input" type="checkbox" id="wallet-confirm" required style="width: 18px; height: 18px; margin-right: 10px;">
+                    <label class="form-check-label" for="wallet-confirm" style="font-weight: 500;">
+                      <strong>Confirmo que o endereço está correto e pertence a mim.</strong><br>
+                      <small style="color: #6c757d;">Transações em blockchain são irreversíveis. Verifique com cuidado.</small>
+                    </label>
+                  </div>
+
+                  <div class="form-actions d-flex justify-content-between" style="margin-top: 30px;">
+                    <button type="button" id="btn-back-to-step2" class="btn secondary" style="padding: 12px 20px; border-radius: 8px; display: flex; align-items: center; gap: 8px;">
+                      <i class="bi bi-arrow-left"></i> Voltar
+                    </button>
+                    <button type="submit" id="btn-complete-transaction" class="btn primary" style="padding: 15px 30px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11); display: flex; align-items: center; gap: 8px;">
+                      <i class="bi bi-check-circle"></i> Completar Transação
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </section>
@@ -499,5 +585,101 @@
 
     <!-- Container para notificações in-app -->
     <div id="notifications-container"></div>
+
+    <!-- Adicionar no final do documento, antes de </body> -->
+    <script>
+      // Inicializar botões de KYC
+      document.addEventListener('DOMContentLoaded', function() {
+        // Botão KYC no topo da página
+        const mainKycBtn = document.getElementById('mainKycBtn');
+        if (mainKycBtn) {
+          mainKycBtn.addEventListener('click', function() {
+            // Chamar diretamente a função para abrir o modal KYC
+            if (typeof handleStartKYC === 'function') {
+              handleStartKYC();
+            } else {
+              // Fallback caso a função não esteja disponível ainda
+              alert('A verificação KYC será disponibilizada em breve.');
+            }
+          });
+        }
+        
+        // Verificar se já existe script para importar os scripts do módulo UI
+        setTimeout(function() {
+          // Carregar o módulo de UI para garantir que o botão KYC esteja disponível
+          import('./assets/js/ui/uiController.js')
+            .then(ui => {
+              // Chamar a função diretamente
+              if (ui.displayFloatingKycButton) {
+                ui.displayFloatingKycButton();
+              }
+            })
+            .catch(err => console.error('Erro ao carregar UI Controller:', err));
+        }, 1000);
+      });
+
+      // Adicionar funcionalidade para os botões da carteira
+      document.addEventListener('DOMContentLoaded', function() {
+        // Botão para colar da área de transferência
+        const clipboardButton = document.querySelector('button[title="Colar da área de transferência"]');
+        if (clipboardButton) {
+          clipboardButton.addEventListener('click', async function() {
+            try {
+              const text = await navigator.clipboard.readText();
+              const walletInput = document.getElementById('wallet-address');
+              if (walletInput && text) {
+                walletInput.value = text;
+                // Disparar o evento blur para validar o endereço
+                const event = new Event('blur');
+                walletInput.dispatchEvent(event);
+              }
+            } catch (err) {
+              console.error('Falha ao ler da área de transferência:', err);
+              alert('Não foi possível acessar a área de transferência. Por favor, cole o endereço manualmente.');
+            }
+          });
+        }
+        
+        // Botão para verificar o endereço
+        const verifyButton = document.querySelector('button[title="Verificar endereço"]');
+        if (verifyButton) {
+          verifyButton.addEventListener('click', function() {
+            const walletInput = document.getElementById('wallet-address');
+            if (walletInput) {
+              // Disparar o evento blur para validar o endereço
+              const event = new Event('blur');
+              walletInput.dispatchEvent(event);
+            }
+          });
+        }
+        
+        // Destacar visualmente redes ao selecionar
+        const networkOptions = document.querySelectorAll('.network-option');
+        networkOptions.forEach(option => {
+          const radioInput = option.querySelector('input[type="radio"]');
+          
+          // Estado inicial
+          if (radioInput.checked) {
+            option.style.borderColor = '#4c6ef5';
+            option.style.backgroundColor = 'rgba(76, 110, 245, 0.05)';
+          }
+          
+          // Mudança de estado
+          radioInput.addEventListener('change', function() {
+            // Resetar todos
+            networkOptions.forEach(opt => {
+              opt.style.borderColor = '#e9ecef';
+              opt.style.backgroundColor = 'transparent';
+            });
+            
+            // Destacar o selecionado
+            if (this.checked) {
+              option.style.borderColor = '#4c6ef5';
+              option.style.backgroundColor = 'rgba(76, 110, 245, 0.05)';
+            }
+          });
+        });
+      });
+    </script>
   </body>
 </html>
