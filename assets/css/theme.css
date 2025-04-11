@@ -1,0 +1,126 @@
+/* Variáveis de tema - Sistema de cores para tema claro/escuro */
+:root {
+  /* Cores base - Tema claro (padrão) */
+  --primary-color: #4caf50;
+  --primary-light: #80e27e;
+  --primary-dark: #087f23;
+  --secondary-color: #2e7d32;
+  --accent-color: #3949ab;
+
+  /* Cores de texto */
+  --text-primary: #333333;
+  --text-secondary: #555555;
+  --text-muted: #757575;
+  --text-inverse: #ffffff;
+
+  /* Cores de fundo */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9f9f9;
+  --bg-tertiary: #e9e9e9;
+  --bg-card: #ffffff;
+
+  /* Cores de estado */
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --error-color: #f44336;
+  --info-color: #2196f3;
+
+  /* Elementos de UI */
+  --border-color: #e0e0e0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --divider-color: #e0e0e0;
+
+  /* Outros */
+  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --gradient-secondary: linear-gradient(135deg, #4caf50 0%, #26a69a 100%);
+}
+
+/* Tema escuro */
+[data-theme='dark'] {
+  /* Cores base - Tema escuro */
+  --primary-color: #43a047;
+  --primary-light: #76d275;
+  --primary-dark: #00701a;
+  --secondary-color: #1b5e20;
+  --accent-color: #5c6bc0;
+
+  /* Cores de texto */
+  --text-primary: #e0e0e0;
+  --text-secondary: #c0c0c0;
+  --text-muted: #aaaaaa;
+  --text-inverse: #121212;
+
+  /* Cores de fundo */
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #2d2d2d;
+  --bg-card: #1d1d1d;
+
+  /* Cores de estado */
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --error-color: #e57373;
+  --info-color: #64b5f6;
+
+  /* Elementos de UI */
+  --border-color: #333333;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --divider-color: #444444;
+
+  /* Outros - ajustados para tema escuro */
+  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --gradient-secondary: linear-gradient(135deg, #43a047 0%, #26a69a 100%);
+}
+
+/* Estilos gerais para tema claro/escuro */
+body {
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--text-inverse);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: var(--text-inverse);
+}
+
+/* Ajustes específicos para tema escuro */
+[data-theme='dark'] .header {
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme='dark'] .card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme='dark'] input,
+[data-theme='dark'] select,
+[data-theme='dark'] textarea {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] table {
+  border-color: var(--border-color);
+}
+
+[data-theme='dark'] th {
+  background-color: var(--bg-tertiary);
+}
+
+[data-theme='dark'] tr:nth-child(even) {
+  background-color: var(--bg-secondary);
+}

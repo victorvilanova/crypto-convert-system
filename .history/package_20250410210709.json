@@ -1,0 +1,37 @@
+{
+  "name": "crypto-convert-system",
+  "version": "1.0.0",
+  "description": "Sistema de conversão de criptomoedas",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "parcel serve index.html",
+    "build": "parcel build index.html",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.js",
+    "format": "prettier --write \"src/**/*.{js,html,css}\""
+  },
+  "keywords": [
+    "crypto",
+    "bitcoin",
+    "ethereum",
+    "converter"
+  ],
+  "author": "FastCripto",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.18.0",
+    "@babel/preset-env": "^7.18.0",
+    "@testing-library/jest-dom": "^5.16.4",
+    "babel-jest": "^28.1.0",
+    "eslint": "^8.16.0",
+    "jest": "^28.1.0",
+    "jest-environment-jsdom": "^28.1.0",
+    "parcel-bundler": "^1.12.5",
+    "prettier": "^2.6.2"
+  },
+  "dependencies": {
+    "core-js": "^3.22.7"
+  }
+}

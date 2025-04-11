@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Converter</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <!-- Add font awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1><i class="fas fa-exchange-alt"></i> Crypto Converter</h1>
+      <div class="theme-toggle">
+        <button id="themeToggle" aria-label="Toggle dark/light theme">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="converter-card">
+      <div class="card-header">
+        <h2>Currency Converter</h2>
+        <span id="lastUpdated" class="last-updated">Last updated: Loading...</span>
+      </div>
+      
+      <form id="converterForm" class="converter-form">
+        <div class="form-group">
+          <label for="amount">Amount</label>
+          <div class="input-wrapper">
+            <input type="text" id="amount" name="amount" placeholder="Enter amount" aria-label="Amount to convert" value="1">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fromCurrency">From</label>
+            <div class="select-wrapper">
+              <select id="fromCurrency" name="fromCurrency" aria-label="Source currency">
+                <option value="loading">Loading...</option>
+              </select>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </div>
+          
+          <button type="button" id="swapButton" class="swap-button" aria-label="Swap currencies">
+            <i class="fas fa-exchange-alt"></i>
+          </button>
+          
+          <div class="form-group">
+            <label for="toCurrency">To</label>
+            <div class="select-wrapper">
+              <select id="toCurrency" name="toCurrency" aria-label="Target currency">
+                <option value="loading">Loading...</option>
+              </select>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <button type="submit" id="convertBtn" class="convert-button">
+            <i class="fas fa-calculator"></i> Convert
+          </button>
+        </div>
+      </form>
+      
+      <div id="resultContainer" class="result-container" style="display: none;">
+        <h3>Conversion Result</h3>
+        <div class="result-value">
+          <span id="convertedAmount" class="converted-amount"></span>
+          <span id="toCurrencyCode" class="currency-code"></span>
+        </div>
+        <div class="conversion-rate">
+          <span id="conversionRate"></span>
+        </div>
+      </div>
+    </section>
+    
+    <section class="history-container" id="conversionHistory">
+      <h3>Conversion History</h3>
+      <ul class="history-list"></ul>
+    </section>
+  </main>
+  
+  <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+    <span class="spinner"></span> Loading...
+  </div>
+  
+  <div id="errorContainer" class="error-container" style="display: none;">
+    <p id="errorMessage"></p>
+    <button class="close-error">×</button>
+  </div>
+  
+  <footer>
+    <div class="container">
+      <p>&copy; 2023 Crypto Converter. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#" id="settingsButton">Settings</a>
+        <a href="#" id="aboutButton">About</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Settings modal -->
+  <div id="settingsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Settings</h3>
+        <button class="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-group">
+          <h4>Display</h4>
+          <div class="setting-item">
+            <label for="themeSelect">Theme</label>
+            <select id="themeSelect">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="auto">System Default</option>
+            </select>
+          </div>
+          <div class="setting-item">
+            <label for="decimalPrecision">Decimal Precision</label>
+            <select id="decimalPrecision">
+              <option value="2">2 decimals</option>
+              <option value="4">4 decimals</option>
+              <option value="6">6 decimals</option>
+              <option value="8">8 decimals</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-group">
+          <h4>Data Updates</h4>
+          <div class="setting-item">
+            <label for="autoRefresh">Auto-refresh Rates</label>
+            <input type="checkbox" id="autoRefresh" class="toggle-switch">
+          </div>
+          <div class="setting-item">
+            <label for="refreshInterval">Refresh Interval</label>
+            <select id="refreshInterval">
+              <option value="60000">1 minute</option>
+              <option value="300000">5 minutes</option>
+              <option value="900000">15 minutes</option>
+              <option value="3600000">1 hour</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-group">
+          <h4>Features</h4>
+          <div class="setting-item">
+            <label for="showHistory">Show Conversion History</label>
+            <input type="checkbox" id="showHistory" class="toggle-switch">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="saveSettings" class="primary-button">Save</button>
+        <button id="resetSettings" class="secondary-button">Reset to Defaults</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Administração de Arbitragem - Sistema de Criptomoedas</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../assets/css/admin.css" />
+    <meta name="robots" content="noindex, nofollow" />
+  </head>
+  <body class="admin-panel">
+    <!-- Barra de navegação administrativa -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="index.html">
+          <i class="fas fa-shield-alt me-2"></i>
+          Admin Panel
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#adminNavbar"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="adminNavbar">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="arbitragem.html">Arbitragem</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="configuracoes.html">Configurações</a>
+            </li>
+          </ul>
+          <div class="d-flex align-items-center">
+            <span class="text-light me-3" id="adminUsername">Admin</span>
+            <button id="adminLogoutBtn" class="btn btn-outline-danger btn-sm">
+              <i class="fas fa-sign-out-alt me-1"></i> Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Container principal -->
+    <div class="container-fluid mt-4" id="mainContent">
+      <!-- Conteúdo da página de arbitragem (visível apenas após autenticação) -->
+      <div class="row mb-4">
+        <div class="col-md-12">
+          <div class="card bg-dark text-white shadow-sm">
+            <div class="card-body">
+              <h1 class="h3">Gestão de Arbitragem</h1>
+              <p class="lead mb-0">
+                Monitore e execute operações de arbitragem entre diferentes
+                criptomoedas e exchanges.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controles e Filtros -->
+      <div class="row mb-4">
+        <div class="col-md-12">
+          <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+              <h6 class="m-0 font-weight-bold">Controles de Arbitragem</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-5">
+                  <div class="input-group mb-3">
+                    <span class="input-group-text">Lucro Mínimo</span>
+                    <input
+                      type="number"
+                      id="minProfitFilter"
+                      class="form-control"
+                      value="0.5"
+                      step="0.1"
+                      min="0"
+                    />
+                    <span class="input-group-text">%</span>
+                  </div>
+                </div>
+                <div class="col-md-5">
+                  <div class="input-group mb-3">
+                    <span class="input-group-text">Tipo de Arbitragem</span>
+                    <select id="arbitrageTypeFilter" class="form-select">
+                      <option value="all">Todos os tipos</option>
+                      <option value="triangular">Triangular</option>
+                      <option value="exchange">Entre Exchanges</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <button id="applyFiltersBtn" class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-1"></i> Aplicar
+                  </button>
+                </div>
+              </div>
+              <div class="row mt-2">
+                <div class="col-md-6">
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="autoRefreshSwitch"
+                      checked
+                    />
+                    <label class="form-check-label" for="autoRefreshSwitch">
+                      Atualização automática (30s)
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6 text-end">
+                  <span id="lastUpdateLabel" class="text-muted">
+                    Última atualização:
+                    <span id="lastUpdateTime">--:--:--</span>
+                  </span>
+                  <button
+                    id="refreshDataBtn"
+                    class="btn btn-outline-secondary btn-sm ms-2"
+                  >
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Oportunidades de Arbitragem Triangular -->
+      <div class="row mb-4">
+        <div class="col-md-12">
+          <div class="card shadow">
+            <div
+              class="card-header bg-success text-white d-flex justify-content-between align-items-center"
+            >
+              <h6 class="m-0 font-weight-bold">
+                Oportunidades de Arbitragem Triangular
+              </h6>
+              <span class="badge bg-light text-dark" id="triangularCount"
+                >0</span
+              >
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Rota</th>
+                      <th>Lucro Potencial</th>
+                      <th>Exchange</th>
+                      <th>Volume 24h</th>
+                      <th>Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody id="triangularOpportunitiesTable">
+                    <tr>
+                      <td colspan="5" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                          <span class="visually-hidden">Carregando...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Oportunidades de Arbitragem Entre Exchanges -->
+      <div class="row mb-4">
+        <div class="col-md-12">
+          <div class="card shadow">
+            <div
+              class="card-header bg-info text-white d-flex justify-content-between align-items-center"
+            >
+              <h6 class="m-0 font-weight-bold">
+                Oportunidades de Arbitragem Entre Exchanges
+              </h6>
+              <span class="badge bg-light text-dark" id="exchangeCount">0</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Par</th>
+                      <th>Exchange Origem</th>
+                      <th>Exchange Destino</th>
+                      <th>Diferença</th>
+                      <th>Volume 24h</th>
+                      <th>Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody id="exchangeOpportunitiesTable">
+                    <tr>
+                      <td colspan="6" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                          <span class="visually-hidden">Carregando...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Histórico de Execuções -->
+      <div class="row mb-4">
+        <div class="col-md-12">
+          <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+              <h6 class="m-0 font-weight-bold">Histórico de Execuções</h6>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Data/Hora</th>
+                      <th>Tipo</th>
+                      <th>Rota/Par</th>
+                      <th>Lucro/Perda</th>
+                      <th>Status</th>
+                      <th>Detalhes</th>
+                    </tr>
+                  </thead>
+                  <tbody id="executionHistoryTable">
+                    <tr>
+                      <td colspan="6" class="text-center py-3">
+                        Nenhuma execução registrada.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Confirmação de Execução -->
+    <div class="modal fade" id="executeModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Executar Operação de Arbitragem</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info mb-3">
+              <i class="fas fa-info-circle me-2"></i>
+              Você está prestes a executar uma operação de arbitragem. Confirme
+              os detalhes abaixo.
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Tipo de Arbitragem:</label>
+              <div id="modalArbitrageType" class="form-control bg-light">
+                Triangular
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Rota/Par:</label>
+              <div id="modalRoute" class="form-control bg-light">
+                BTC → ETH → LTC → BTC
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Lucro Potencial:</label>
+              <div id="modalProfit" class="form-control bg-light">2.34%</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Valor Inicial:</label>
+              <div class="input-group">
+                <input
+                  type="number"
+                  id="modalInitialAmount"
+                  class="form-control"
+                  value="100"
+                  min="10"
+                />
+                <span class="input-group-text" id="modalInitialCurrency"
+                  >USD</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="btn btn-success"
+              id="confirmExecuteBtn"
+            >
+              <i class="fas fa-check me-1"></i> Confirmar Execução
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Detalhes de Execução -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header bg-info text-white">
+            <h5 class="modal-title">Detalhes da Operação</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row mb-3">
+              <div class="col-sm-6">
+                <h6>Informações Gerais</h6>
+                <table class="table table-sm table-bordered">
+                  <tbody>
+                    <tr>
+                      <th>ID da Operação</th>
+                      <td id="detailsId">OP-123456</td>
+                    </tr>
+                    <tr>
+                      <th>Data/Hora</th>
+                      <td id="detailsDateTime">2023-01-01 12:34:56</td>
+                    </tr>
+                    <tr>
+                      <th>Tipo</th>
+                      <td id="detailsType">Triangular</td>
+                    </tr>
+                    <tr>
+                      <th>Status</th>
+                      <td id="detailsStatus">
+                        <span class="badge bg-success">Concluído</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="col-sm-6">
+                <h6>Resultados</h6>
+                <table class="table table-sm table-bordered">
+                  <tbody>
+                    <tr>
+                      <th>Valor Inicial</th>
+                      <td id="detailsInitialAmount">100 USD</td>
+                    </tr>
+                    <tr>
+                      <th>Valor Final</th>
+                      <td id="detailsFinalAmount">102.34 USD</td>
+                    </tr>
+                    <tr>
+                      <th>Lucro/Perda</th>
+                      <td id="detailsProfit">
+                        <span class="text-success">+2.34%</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Taxas</th>
+                      <td id="detailsFees">0.25 USD</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <h6>Etapas da Operação</h6>
+            <div class="table-responsive">
+              <table class="table table-striped table-bordered">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Descrição</th>
+                    <th>Valor</th>
+                    <th>Taxa</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="detailsStepsTable">
+                  <!-- Dados de exemplo serão preenchidos via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Fechar
+            </button>
+            <button type="button" class="btn btn-primary" id="exportDetailsBtn">
+              <i class="fas fa-file-export me-1"></i> Exportar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Script do Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script da página de arbitragem -->
+    <script type="module">
+      import ArbitrageAdminController from '../assets/js/controllers/ArbitrageAdminController.js';
+      import AuthService from '../assets/js/services/AuthService.js';
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const authService = new AuthService();
+
+        // Verifica autenticação
+        if (!authService.isAuthenticated()) {
+          window.location.href = 'index.html';
+          return;
+        }
+
+        // Inicializa controlador
+        const arbitrageController = new ArbitrageAdminController();
+        arbitrageController.init();
+
+        // Configura nome de usuário e botão de logout
+        document.getElementById('adminUsername').textContent =
+          authService.getCurrentUser() || 'Admin';
+        document
+          .getElementById('adminLogoutBtn')
+          .addEventListener('click', () => {
+            authService.logout();
+            window.location.href = 'index.html';
+          });
+      });
+    </script>
+  </body>
+</html>
