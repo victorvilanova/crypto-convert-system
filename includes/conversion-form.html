@@ -1,0 +1,84 @@
+<!-- Formulário acessível de conversão -->
+<form id="conversion-form" class="conversion-form" aria-live="polite">
+  <div class="form-group">
+    <label for="amount" id="amount-label">Valor</label>
+    <div class="input-with-icon">
+      <input
+        type="number"
+        id="amount"
+        name="amount"
+        min="1"
+        step="any"
+        required
+        aria-required="true"
+        aria-labelledby="amount-label"
+        aria-describedby="amount-help"
+      />
+      <small id="amount-help" class="form-text"
+        >Insira o valor que deseja converter</small
+      >
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="from-currency" id="from-currency-label">Moeda de origem</label>
+    <select
+      id="from-currency"
+      name="fromCurrency"
+      aria-required="true"
+      aria-labelledby="from-currency-label"
+    >
+      <option value="BTC">Bitcoin (BTC)</option>
+      <option value="ETH">Ethereum (ETH)</option>
+      <option value="USDT">Tether (USDT)</option>
+      <option value="BRL">Real Brasileiro (BRL)</option>
+      <option value="USD">Dólar Americano (USD)</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="to-currency" id="to-currency-label">Moeda de destino</label>
+    <select
+      id="to-currency"
+      name="toCurrency"
+      aria-required="true"
+      aria-labelledby="to-currency-label"
+    >
+      <option value="BRL">Real Brasileiro (BRL)</option>
+      <option value="USD">Dólar Americano (USD)</option>
+      <option value="BTC">Bitcoin (BTC)</option>
+      <option value="ETH">Ethereum (ETH)</option>
+    </select>
+  </div>
+
+  <button
+    type="submit"
+    class="btn btn-primary btn-block"
+    aria-label="Converter valores"
+    id="convert-button"
+  >
+    <span>Converter</span>
+    <i class="fas fa-exchange-alt"></i>
+  </button>
+
+  <div
+    id="result-container"
+    role="status"
+    aria-live="polite"
+    class="result-area"
+    style="display: none"
+  ></div>
+
+  <div
+    id="error-container"
+    role="alert"
+    class="error-message"
+    style="display: none"
+  ></div>
+</form>
+
+<!-- Incluir área de carregamento -->
+<div id="loading-indicator" class="loading-spinner" style="display: none">
+  <div class="spinner"></div>
+  <p class="loading-text">Processando sua solicitação...</p>
+</div>

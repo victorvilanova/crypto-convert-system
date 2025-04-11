@@ -1,0 +1,109 @@
+{
+  "app": {
+    "name": "FastCripto Converter",
+    "tagline": "The fastest way to convert cryptocurrencies"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "search": "Search",
+    "notFound": "Not found",
+    "tryAgain": "Try again"
+  },
+  "navigation": {
+    "home": "Home",
+    "convert": "Converter",
+    "history": "History",
+    "settings": "Settings",
+    "about": "About",
+    "help": "Help"
+  },
+  "converter": {
+    "title": "Cryptocurrency Converter",
+    "from": "From",
+    "to": "To",
+    "amount": "Amount",
+    "result": "Result",
+    "convert": "Convert",
+    "selectCrypto": "Select cryptocurrency",
+    "selectCurrency": "Select currency",
+    "conversionRate": "Conversion rate",
+    "lastUpdated": "Last updated",
+    "disclaimer": "Values are approximate and may vary according to the source."
+  },
+  "history": {
+    "title": "Conversion History",
+    "empty": "No conversions have been made yet",
+    "date": "Date",
+    "conversion": "Conversion",
+    "value": "Value",
+    "result": "Result",
+    "source": "Source",
+    "clear": "Clear history",
+    "export": "Export",
+    "import": "Import",
+    "confirmClear": "Are you sure you want to clear all history?",
+    "entries": {
+      "one": "{{count}} entry",
+      "other": "{{count}} entries"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "defaultCrypto": "Default cryptocurrency",
+    "defaultCurrency": "Default currency",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "dataSource": "Data source",
+    "decimalPlaces": "Decimal places",
+    "refreshRate": "Refresh rate",
+    "autoRefresh": "Auto refresh",
+    "saveHistory": "Save history",
+    "clearData": "Clear data",
+    "exportData": "Export data",
+    "importData": "Import data",
+    "resetSettings": "Reset to defaults",
+    "confirmReset": "Are you sure you want to reset all settings to default?",
+    "saved": "Settings saved successfully"
+  },
+  "themes": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "custom": "Custom"
+  },
+  "notifications": {
+    "enable": "Enable notifications",
+    "priceAlerts": "Price alerts",
+    "updates": "Updates",
+    "news": "News",
+    "desktop": "Desktop notifications",
+    "sound": "Sound"
+  },
+  "privacy": {
+    "title": "Privacy",
+    "analytics": "Allow usage analytics",
+    "cookies": "Accept cookies",
+    "localStorage": "Local storage",
+    "historyTracking": "Track history",
+    "dataCollection": "Data collection",
+    "policy": "Privacy Policy"
+  },
+  "errors": {
+    "networkError": "Connection error. Check your internet and try again.",
+    "apiError": "API error. Please try again later.",
+    "invalidAmount": "Invalid amount. Please check the value entered.",
+    "rateLimitExceeded": "Rate limit exceeded. Please try again later.",
+    "unknownError": "Unknown error. Please try again.",
+    "conversionFailed": "Conversion failed. Please try again."
+  }
+}
