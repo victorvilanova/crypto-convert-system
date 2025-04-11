@@ -1150,12 +1150,17 @@ function validarCPF(cpf) {
 
 // Adicionar uma nova função para exibir o modal KYC
 function showKYCModal(onSuccess) {
+  // Variáveis para armazenar código de verificação e email do usuário
+  let verificationCode = null;
+  let userEmail = null;
+  let countdownInterval = null;
+
   // Remover qualquer modal existente primeiro
   const existingModal = document.querySelector('.kyc-modal');
   if (existingModal) {
     document.body.removeChild(existingModal);
   }
-
+  
   // Criar o modal de KYC com design melhorado
   const modal = document.createElement('div');
   modal.className = 'kyc-modal';
@@ -1241,6 +1246,10 @@ function showKYCModal(onSuccess) {
                 <label for="kyc-phone" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Telefone</label>
                 <input type="text" id="kyc-phone" placeholder="(00) 00000-0000" required style="width: 100%; padding: 12px 15px; border: 1px solid #ced4da; border-radius: 8px; font-size: 16px; transition: border-color 0.2s ease;">
                 <div id="phone-feedback" style="display: none; margin-top: 8px; font-size: 14px;"></div>
+                <div style="margin-top: 5px; font-size: 0.8rem; color: #6c757d;">
+                  <i class="bi bi-info-circle-fill" style="margin-right: 5px;"></i> 
+                  Use o formato (XX) XXXXX-XXXX para celular ou (XX) XXXX-XXXX para telefone fixo
+                </div>
               </div>
               
               <div class="form-group" style="background: #e7f5ff; padding: 15px; border-radius: 8px; margin-top: 10px;">
@@ -1497,8 +1506,115 @@ function showKYCModal(onSuccess) {
   
   // Focar no primeiro campo ao abrir o modal
   setTimeout(() => {
-    document.getElementById('kyc-name')?.focus();
+    document.getElementById('kyc-email')?.focus();
   }, 300);
+  
+  // Configurar formatação automática do telefone durante a digitação
+  const phoneInput = document.getElementById('kyc-phone');
+  if (phoneInput) {
+    phoneInput.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      
+      // Limitar a 11 dígitos no máximo
+      if (value.length > 11) {
+        value = value.substring(0, 11);
+      }
+      
+      // Aplicar formatação baseada no comprimento
+      if (value.length > 10) {
+        // Formato para celular: (XX) XXXXX-XXXX
+        e.target.value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      } else if (value.length > 6) {
+        // Formato para telefone fixo ou celular incompleto: (XX) XXXX-XXXX
+        e.target.value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+      } else if (value.length > 2) {
+        // Apenas DDD: (XX) 
+        e.target.value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+      } else {
+        // Poucos dígitos, mantém sem formatação
+        e.target.value = value;
+      }
+      
+      // Verificação em tempo real do DDD e formato
+      if (value.length >= 2) {
+        // Lista de DDDs válidos do Brasil
+        const validDDDs = [
+          '11', '12', '13', '14', '15', '16', '17', '18', '19',
+          '21', '22', '24', '27', '28',
+          '31', '32', '33', '34', '35', '37', '38',
+          '41', '42', '43', '44', '45', '46', '47', '48', '49',
+          '51', '53', '54', '55',
+          '61', '62', '63', '64', '65', '66', '67', '68', '69',
+          '71', '73', '74', '75', '77', '79',
+          '81', '82', '83', '84', '85', '86', '87', '88', '89',
+          '91', '92', '93', '94', '95', '96', '97', '98', '99'
+        ];
+        
+        const ddd = value.substring(0, 2);
+        
+        // Verificar se o DDD é válido
+        if (!validDDDs.includes(ddd)) {
+          this.style.borderColor = '#f59e0b';
+          const warningElement = ensureWarningElement(this, 'phone-warning');
+          warningElement.textContent = `DDD ${ddd} não é válido no Brasil`;
+        }
+        // Verificar tipo de telefone conforme a quantidade de dígitos
+        else if (value.length === 11 && value.charAt(2) !== '9') {
+          this.style.borderColor = '#f59e0b';
+          const warningElement = ensureWarningElement(this, 'phone-warning');
+          warningElement.textContent = 'Celular deve começar com 9 após o DDD';
+        }
+        else if (value.length === 10 && (value.charAt(2) === '0' || value.charAt(2) === '9')) {
+          this.style.borderColor = '#f59e0b';
+          const warningElement = ensureWarningElement(this, 'phone-warning');
+          warningElement.textContent = 'Telefone fixo não deve começar com 0 ou 9';
+        }
+        else {
+          // Remover aviso se tudo estiver ok
+          this.style.borderColor = '';
+          removeWarningElement(this, 'phone-warning');
+          
+          // Destacar positivamente se completo e válido
+          if ((value.length === 10 && value.charAt(2) !== '0' && value.charAt(2) !== '9') ||
+              (value.length === 11 && value.charAt(2) === '9')) {
+            this.style.borderColor = '#10b981';
+            this.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
+          } else {
+            this.style.backgroundColor = '';
+          }
+        }
+      }
+    });
+    
+    // Ao perder o foco, validar completamente
+    phoneInput.addEventListener('blur', function() {
+      const phoneDigits = this.value.replace(/\D/g, '');
+      const feedbackElement = document.getElementById('phone-feedback');
+      
+      if (window.validateBrazilianPhone && typeof window.validateBrazilianPhone === 'function') {
+        if (window.validateBrazilianPhone(phoneDigits)) {
+          // Telefone válido
+          if (feedbackElement) {
+            feedbackElement.style.display = 'block';
+            feedbackElement.style.color = '#047857';
+            feedbackElement.innerHTML = '<i class="bi bi-check-circle-fill" style="margin-right: 5px;"></i> Número de telefone válido';
+          }
+          this.style.borderColor = '#10b981';
+          this.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
+          removeWarningElement(this, 'phone-warning');
+        } else if (phoneDigits.length > 0) {
+          // Telefone inválido
+          if (feedbackElement) {
+            feedbackElement.style.display = 'block';
+            feedbackElement.style.color = '#e11d48';
+            feedbackElement.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="margin-right: 5px;"></i> Número de telefone inválido';
+          }
+          this.style.borderColor = '#ef4444';
+          this.style.backgroundColor = 'rgba(239, 68, 68, 0.05)';
+        }
+      }
+    });
+  }
   
   // Configurar a validação do CPF
   const cpfInput = document.getElementById('kyc-cpf');
@@ -1643,33 +1759,61 @@ function showKYCModal(onSuccess) {
       return;
     }
     
-    // Validar formato de telefone brasileiro
-    const phoneDigits = phone.replace(/\D/g, '');
-    if (!(/^([1-9]{2})(9[0-9]{8}|[1-8][0-9]{7})$/.test(phoneDigits))) {
-      alert('Por favor, informe um número de telefone válido.');
-      document.getElementById('kyc-phone').focus();
-      return;
-    }
-    
-    // Salvar email para uso posterior
-    userEmail = email;
-    
-    // Gerar código aleatório para verificação (em produção, seria enviado por email)
-    verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log('Código de verificação:', verificationCode); // Apenas para desenvolvimento
-    
-    // Exibir email na tela de verificação
-    document.getElementById('verification-email').textContent = email;
-    
-    // Avançar para a etapa 2 (Verificação Email)
-    goToKYCStep(2);
-    
-    // Iniciar contador regressivo para reenvio
-    startEmailVerificationCountdown();
+    // Verificar correspondência de CPF com nome e data de nascimento
+    verifyCPFandNameMatch(name, cpf, birthdate, function(isValid, message) {
+      if (!isValid) {
+        alert(message);
+        document.getElementById('kyc-cpf').focus();
+        return;
+      }
+      
+      // Validar formato de telefone brasileiro
+      const phoneDigits = phone.replace(/\D/g, '');
+      
+      // Verificar se o telefone é válido usando a função do módulo de segurança
+      if (window.validateBrazilianPhone && typeof window.validateBrazilianPhone === 'function') {
+        if (!window.validateBrazilianPhone(phoneDigits)) {
+          alert('Por favor, informe um número de telefone brasileiro válido no formato (XX) XXXXX-XXXX para celular ou (XX) XXXX-XXXX para fixo.');
+          document.getElementById('kyc-phone').focus();
+          return;
+        }
+      } else {
+        // Fallback para verificação básica se a função avançada não estiver disponível
+        if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+          alert('Por favor, informe um número de telefone válido com 10 ou 11 dígitos.');
+          document.getElementById('kyc-phone').focus();
+          return;
+        }
+        
+        if (phoneDigits.length === 11 && phoneDigits.charAt(2) !== '9') {
+          alert('Celulares no Brasil devem começar com 9 após o DDD.');
+          document.getElementById('kyc-phone').focus();
+          return;
+        }
+      }
+      
+      // Salvar email para uso posterior
+      userEmail = email;
+      
+      // Simulação do envio de email
+      simulateSendingEmail(email).then(() => {
+        // Gerar código aleatório para verificação
+        verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log('Código de verificação:', verificationCode); // Apenas para desenvolvimento
+        
+        // Exibir email na tela de verificação
+        document.getElementById('verification-email').textContent = email;
+        
+        // Avançar para a etapa 2 (Verificação Email)
+        goToKYCStep(2);
+        
+        // Iniciar contador regressivo para reenvio
+        startEmailVerificationCountdown();
+      });
+    });
   });
   
   // Função para iniciar contador de reenvio de código
-  let countdownInterval = null;
   function startEmailVerificationCountdown() {
     // Limpar intervalo existente, se houver
     if (countdownInterval) {
@@ -1717,25 +1861,66 @@ function showKYCModal(onSuccess) {
     resendButton.addEventListener('click', function() {
       if (this.disabled) return;
       
-      // Gerar novo código
-      verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-      console.log('Novo código de verificação:', verificationCode); // Apenas para desenvolvimento
+      // Desabilitar o botão imediatamente para evitar múltiplos cliques
+      this.disabled = true;
+      this.style.color = '#adb5bd';
+      this.style.cursor = 'not-allowed';
       
-      // Mostrar mensagem de sucesso
-      const codeFeedback = document.getElementById('code-feedback');
-      if (codeFeedback) {
-        codeFeedback.style.display = 'block';
-        codeFeedback.style.color = '#047857';
-        codeFeedback.innerHTML = '<i class="bi bi-check-circle-fill" style="margin-right: 5px;"></i> Novo código enviado para seu email';
+      // Criar overlay de carregamento menor, apenas para o botão de reenvio
+      const emailVerificationContainer = this.closest('div').parentNode;
+      
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.className = 'resend-loading';
+      loadingIndicator.style.display = 'flex';
+      loadingIndicator.style.alignItems = 'center';
+      loadingIndicator.style.justifyContent = 'center';
+      loadingIndicator.style.padding = '10px 0';
+      loadingIndicator.style.marginTop = '10px';
+      loadingIndicator.innerHTML = `
+        <div style="width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #5d5fef; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px;"></div>
+        <span style="font-size: 0.9rem; color: #495057;">Reenviando código...</span>
+      `;
+      
+      // Adicionar após o contador
+      emailVerificationContainer.appendChild(loadingIndicator);
+      
+      // Simular reenvio
+      setTimeout(() => {
+        // Gerar novo código
+        verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log('Novo código de verificação:', verificationCode); // Apenas para desenvolvimento
         
-        // Esconder após 5 segundos
+        // Atualizar mensagem de carregamento
+        loadingIndicator.innerHTML = `
+          <div style="width: 20px; height: 20px; background-color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+            <span style="color: white; font-size: 12px; font-weight: bold;">✓</span>
+          </div>
+          <span style="font-size: 0.9rem; color: #047857;">Novo código enviado!</span>
+        `;
+        
+        // Remover o indicador após um tempo
         setTimeout(() => {
-          codeFeedback.style.display = 'none';
-        }, 5000);
-      }
-      
-      // Reiniciar o contador
-      startEmailVerificationCountdown();
+          if (emailVerificationContainer.contains(loadingIndicator)) {
+            emailVerificationContainer.removeChild(loadingIndicator);
+          }
+          
+          // Mostrar mensagem de sucesso no feedback
+          const codeFeedback = document.getElementById('code-feedback');
+          if (codeFeedback) {
+            codeFeedback.style.display = 'block';
+            codeFeedback.style.color = '#047857';
+            codeFeedback.innerHTML = '<i class="bi bi-check-circle-fill" style="margin-right: 5px;"></i> Novo código enviado para seu email';
+            
+            // Esconder após 5 segundos
+            setTimeout(() => {
+              codeFeedback.style.display = 'none';
+            }, 5000);
+          }
+          
+          // Reiniciar o contador
+          startEmailVerificationCountdown();
+        }, 1500);
+      }, 2000);
     });
   }
   
@@ -1771,59 +1956,119 @@ function showKYCModal(onSuccess) {
         return;
       }
       
-      // Verificar se o código está correto
-      if (enteredCode === verificationCode) {
-        // Código correto
-        if (codeFeedback) {
-          codeFeedback.style.display = 'block';
-          codeFeedback.style.color = '#047857';
-          codeFeedback.innerHTML = '<i class="bi bi-check-circle-fill" style="margin-right: 5px;"></i> Código verificado com sucesso!';
-        }
-        
-        // Avançar para a próxima etapa após um pequeno delay
-        setTimeout(() => {
-          goToKYCStep(3);
-          
-          // Limpar intervalo
-          if (countdownInterval) {
-            clearInterval(countdownInterval);
-            countdownInterval = null;
+      // Desabilitar o botão durante a verificação
+      this.disabled = true;
+      this.innerHTML = '<div style="width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid white; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px;"></div> Verificando...';
+      
+      // Simular uma verificação com delay para feedback visual
+      setTimeout(() => {
+        // Verificar se o código está correto
+        if (enteredCode === verificationCode) {
+          // Código correto
+          if (codeFeedback) {
+            codeFeedback.style.display = 'block';
+            codeFeedback.style.color = '#047857';
+            codeFeedback.innerHTML = '<i class="bi bi-check-circle-fill" style="margin-right: 5px;"></i> Código verificado com sucesso!';
           }
-        }, 1000);
-      } else {
-        // Código incorreto
-        if (codeFeedback) {
-          codeFeedback.style.display = 'block';
-          codeFeedback.style.color = '#e11d48';
-          codeFeedback.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="margin-right: 5px;"></i> Código incorreto. Verifique e tente novamente';
+          
+          // Mostrar animação de sucesso no botão
+          this.innerHTML = '<i class="bi bi-check-lg" style="margin-right: 8px;"></i> Verificado';
+          this.style.backgroundColor = '#10b981';
+          
+          // Destacar campo com estilo de sucesso
+          codeInput.style.borderColor = '#10b981';
+          codeInput.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
+          
+          // Avançar para a próxima etapa após um pequeno delay
+          setTimeout(() => {
+            goToKYCStep(3);
+            
+            // Limpar intervalo
+            if (countdownInterval) {
+              clearInterval(countdownInterval);
+              countdownInterval = null;
+            }
+          }, 1000);
+        } else {
+          // Código incorreto
+          if (codeFeedback) {
+            codeFeedback.style.display = 'block';
+            codeFeedback.style.color = '#e11d48';
+            
+            // Verificar o tipo de erro no código
+            if (enteredCode.length !== 6) {
+              codeFeedback.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="margin-right: 5px;"></i> O código deve ter 6 dígitos';
+            } else if (!/^\d+$/.test(enteredCode)) {
+              codeFeedback.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="margin-right: 5px;"></i> O código deve conter apenas números';
+            } else {
+              // Destacar os dígitos que estão corretos se houver alguma correspondência
+              let feedbackMessage = '<i class="bi bi-exclamation-circle-fill" style="margin-right: 5px;"></i> Código incorreto. ';
+              
+              // Calcular quantos dígitos estão corretos e na posição certa
+              let correctDigits = 0;
+              for (let i = 0; i < 6; i++) {
+                if (enteredCode[i] === verificationCode[i]) {
+                  correctDigits++;
+                }
+              }
+              
+              if (correctDigits > 0) {
+                feedbackMessage += `${correctDigits} dígitos corretos. Verifique seu email e tente novamente.`;
+              } else {
+                feedbackMessage += 'Verifique seu email e tente novamente.';
+              }
+              
+              codeFeedback.innerHTML = feedbackMessage;
+            }
+          }
+          
+          // Restaurar o botão
+          this.disabled = false;
+          this.innerHTML = 'Verificar';
+          
+          // Destacar campo com erro
+          codeInput.style.borderColor = '#ef4444';
+          codeInput.style.backgroundColor = 'rgba(239, 68, 68, 0.05)';
+          
+          // Adicionar animação shake ao input para feedback visual
+          codeInput.style.animation = 'shake 0.5s';
+          
+          // Adicionar keyframe para animação shake se ainda não existir
+          if (!document.getElementById('shake-animation')) {
+            const shakeStyle = document.createElement('style');
+            shakeStyle.id = 'shake-animation';
+            shakeStyle.textContent = `
+              @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+              }
+            `;
+            document.head.appendChild(shakeStyle);
+          }
+          
+          // Limpar estilo após 2 segundos
+          setTimeout(() => {
+            codeInput.style.borderColor = '#ced4da';
+            codeInput.style.backgroundColor = 'white';
+            codeInput.style.animation = '';
+          }, 2000);
         }
-        
-        // Destacar campo com erro
-        codeInput.style.borderColor = '#ef4444';
-        codeInput.style.backgroundColor = 'rgba(239, 68, 68, 0.05)';
-        
-        // Limpar estilo após 2 segundos
-        setTimeout(() => {
-          codeInput.style.borderColor = '#ced4da';
-          codeInput.style.backgroundColor = 'white';
-        }, 2000);
-      }
-    });
-  }
-  
-  // Configurar campo de código de verificação para aceitar apenas números
-  const codeInput = document.getElementById('email-code');
-  if (codeInput) {
-    codeInput.addEventListener('input', function() {
-      this.value = this.value.replace(/\D/g, '');
+      }, 1500);
     });
     
-    // Verificar automaticamente quando 6 dígitos forem digitados
-    codeInput.addEventListener('input', function() {
-      if (this.value.length === 6) {
-        emailVerifyButton.click();
-      }
-    });
+    // Verificar código automaticamente quando 6 dígitos forem digitados
+    const codeInput = document.getElementById('email-code');
+    if (codeInput) {
+      codeInput.addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '');
+        
+        // Verificar automaticamente quando 6 dígitos forem digitados
+        if (this.value.length === 6 && !emailVerifyButton.disabled) {
+          emailVerifyButton.click();
+        }
+      });
+    }
   }
   
   // Enviar documentos
@@ -1838,40 +2083,118 @@ function showKYCModal(onSuccess) {
         return;
       }
       
+      // Desabilitar o botão para evitar múltiplos envios
+      this.disabled = true;
+      this.textContent = 'Enviando...';
+      this.style.backgroundColor = '#adb5bd';
+      
       // Esconder área de upload
-      document.querySelector('.form-group').style.display = 'none';
+      const documentForms = document.querySelectorAll('.form-group');
+      documentForms.forEach(form => {
+        form.style.display = 'none';
+      });
       
       // Mostrar etapas de análise
-      document.getElementById('analysis-steps').style.display = 'block';
+      const analysisStepsContainer = document.getElementById('analysis-steps');
+      if (analysisStepsContainer) {
+        analysisStepsContainer.style.display = 'block';
+      }
       
-      // Iniciar a simulação do processo de análise
-      simulateKYCAnalysis(
-        document.getElementById('kyc-name').value,
-        document.getElementById('kyc-cpf').value,
-        document.querySelector('input[name="document-type"]:checked').value,
-        function() {
-          // Atualizar dados na página de aprovação
-          document.getElementById('verification-name').textContent = document.getElementById('kyc-name').value;
-          document.getElementById('verification-cpf').textContent = document.getElementById('kyc-cpf').value;
-          document.getElementById('verification-email-confirmed').textContent = userEmail;
-          document.getElementById('verification-date').textContent = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR');
-          document.getElementById('verification-id').textContent = 'KYC-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-          
-          // Chamar callback de sucesso quando o botão continuar for clicado
-          const continueButton = document.getElementById('kyc-continue');
-          if (continueButton) {
-            continueButton.addEventListener('click', function() {
-              // Remover o modal
-              document.body.removeChild(modal);
+      // Esconder animação de loading durante análise
+      const loadingAnimation = document.getElementById('analysis-animation');
+      if (loadingAnimation) {
+        loadingAnimation.style.display = 'block';
+      }
+      
+      // Mostrar mensagem de análise
+      const analysisContainer = document.getElementById('kyc-step-3');
+      const h3 = analysisContainer.querySelector('h3');
+      const p = analysisContainer.querySelector('p');
+      
+      if (h3) h3.textContent = 'Análise em Andamento';
+      if (p) p.textContent = 'Estamos verificando seus documentos e informações. Este processo pode levar alguns instantes.';
+      
+      // Iniciar a simulação do processo de análise após um breve delay
+      setTimeout(() => {
+        // Verificar se a função está disponível globalmente
+        if (typeof window.simulateKYCAnalysis === 'function') {
+          window.simulateKYCAnalysis(
+            document.getElementById('kyc-name').value,
+            document.getElementById('kyc-cpf').value,
+            document.querySelector('input[name="document-type"]:checked').value,
+            function() {
+              goToKYCStep(4);
               
-              // Chamar o callback de sucesso
-              if (typeof onSuccess === 'function') {
-                onSuccess();
-              }
-            });
-          }
+              // Atualizar dados na página de aprovação
+              document.getElementById('verification-name').textContent = document.getElementById('kyc-name').value;
+              document.getElementById('verification-cpf').textContent = document.getElementById('kyc-cpf').value;
+              document.getElementById('verification-email-confirmed').textContent = userEmail;
+              document.getElementById('verification-date').textContent = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR');
+              document.getElementById('verification-id').textContent = 'KYC-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+              
+              // Configurar botão final
+              setupFinalButton(onSuccess);
+            }
+          );
+        } else {
+          // Função não está disponível, usar função local
+          simulateKYCAnalysis(
+            document.getElementById('kyc-name').value,
+            document.getElementById('kyc-cpf').value,
+            document.querySelector('input[name="document-type"]:checked').value,
+            function() {
+              goToKYCStep(4);
+              
+              // Atualizar dados na página de aprovação
+              document.getElementById('verification-name').textContent = document.getElementById('kyc-name').value;
+              document.getElementById('verification-cpf').textContent = document.getElementById('kyc-cpf').value;
+              document.getElementById('verification-email-confirmed').textContent = userEmail || 'Não informado';
+              document.getElementById('verification-date').textContent = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR');
+              document.getElementById('verification-id').textContent = 'KYC-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+              
+              // Configurar botão final
+              setupFinalButton(onSuccess);
+            }
+          );
         }
-      );
+      }, 500);
+    });
+  }
+
+  // Função para configurar o botão final
+  function setupFinalButton(onSuccess) {
+    const continueButton = document.getElementById('kyc-continue');
+    if (!continueButton) return;
+    
+    // Remover event listeners existentes clonando o botão
+    const newButton = continueButton.cloneNode(true);
+    if (continueButton.parentNode) {
+      continueButton.parentNode.replaceChild(newButton, continueButton);
+    }
+    
+    // Garantir estilo correto
+    newButton.style.backgroundColor = '#5d5fef';
+    newButton.style.color = 'white';
+    newButton.style.cursor = 'pointer';
+    newButton.disabled = false;
+    
+    // Adicionar novo event listener
+    newButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Remover o modal
+      const modal = document.querySelector('.kyc-modal');
+      if (modal && document.body.contains(modal)) {
+        document.body.removeChild(modal);
+      }
+      
+      // Executar callback de sucesso
+      if (typeof onSuccess === 'function') {
+        onSuccess();
+      }
+      
+      return false;
     });
   }
 
@@ -1926,6 +2249,7 @@ function showKYCModal(onSuccess) {
 
 // Disponibilizar a função globalmente
 window.showKYCModal = showKYCModal;
+window.simulateKYCAnalysis = simulateKYCAnalysis;
 
 // Função para obter a taxa de câmbio para uma moeda específica
 function getRateForCurrency(currency) {
@@ -2325,4 +2649,159 @@ function simulateKYCAnalysis(name, cpf, docType, callback) {
   
   // Iniciar o processamento
   processNextStep();
+}
+
+// Função utilitária para criar ou recuperar elemento de aviso
+function ensureWarningElement(inputElement, className) {
+  const parent = inputElement.parentNode;
+  let warningElement = parent.querySelector('.' + className);
+  
+  if (!warningElement) {
+    warningElement = document.createElement('div');
+    warningElement.className = className;
+    warningElement.style.color = '#f59e0b';
+    warningElement.style.fontSize = '0.8rem';
+    warningElement.style.marginTop = '5px';
+    parent.appendChild(warningElement);
+  }
+  
+  return warningElement;
+}
+
+// Função utilitária para remover elemento de aviso
+function removeWarningElement(inputElement, className) {
+  const parent = inputElement.parentNode;
+  const warningElement = parent.querySelector('.' + className);
+  
+  if (warningElement) {
+    warningElement.remove();
+  }
+}
+
+/**
+ * Simula o envio de email com feedback visual
+ * @param {string} email - Email para o qual enviar a verificação
+ * @returns {Promise} Promessa que resolve quando a simulação é concluída
+ */
+function simulateSendingEmail(email) {
+  return new Promise((resolve) => {
+    // Criar um overlay de carregamento
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.style.position = 'absolute';
+    loadingOverlay.style.top = '0';
+    loadingOverlay.style.left = '0';
+    loadingOverlay.style.width = '100%';
+    loadingOverlay.style.height = '100%';
+    loadingOverlay.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+    loadingOverlay.style.display = 'flex';
+    loadingOverlay.style.flexDirection = 'column';
+    loadingOverlay.style.alignItems = 'center';
+    loadingOverlay.style.justifyContent = 'center';
+    loadingOverlay.style.zIndex = '1000';
+    loadingOverlay.style.borderRadius = '8px';
+    
+    loadingOverlay.innerHTML = `
+      <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #5d5fef; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      <p style="margin-top: 20px; font-weight: 600; color: #333;">Enviando email de verificação para ${email.substring(0, 3)}***${email.substring(email.indexOf('@'))}</p>
+    `;
+    
+    // Adicionar estilo para animação
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Adicionar o overlay ao formulário
+    const form = document.getElementById('kyc-form');
+    form.style.position = 'relative';
+    form.appendChild(loadingOverlay);
+    
+    // Simular tempo de envio (1-2 segundos)
+    setTimeout(() => {
+      // Atualizar overlay para mostrar sucesso
+      loadingOverlay.innerHTML = `
+        <div style="width: 60px; height: 60px; background-color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+          <span style="color: white; font-size: 30px; font-weight: bold;">✓</span>
+        </div>
+        <p style="font-weight: 600; color: #333; margin-bottom: 5px;">Email enviado com sucesso!</p>
+        <p style="color: #666; font-size: 0.9rem; max-width: 300px; text-align: center;">Um código de verificação foi enviado para ${email.substring(0, 3)}***${email.substring(email.indexOf('@'))}</p>
+      `;
+      
+      // Remover o overlay após mostrar a mensagem de sucesso
+      setTimeout(() => {
+        form.removeChild(loadingOverlay);
+        resolve();
+      }, 1500);
+    }, 1500 + Math.random() * 500); // Adicionar um tempo aleatório para parecer mais realista
+  });
+}
+
+/**
+ * Verifica se o CPF corresponde ao nome e data de nascimento
+ * @param {string} name - Nome completo do usuário
+ * @param {string} cpf - CPF do usuário (apenas números)
+ * @param {string} birthdate - Data de nascimento (formato YYYY-MM-DD)
+ * @param {Function} callback - Função de callback com resultado (isValid, message)
+ */
+function verifyCPFandNameMatch(name, cpf, birthdate, callback) {
+  // Em um ambiente real, aqui faria uma chamada para uma API de verificação
+  // Como é uma simulação, vamos criar uma lógica de verificação baseada em alguns critérios
+  
+  // Verificar formato da data
+  const birthdateObj = new Date(birthdate);
+  const today = new Date();
+  const age = today.getFullYear() - birthdateObj.getFullYear();
+  
+  // Verificar se é maior de idade
+  if (age < 18) {
+    callback(false, 'É necessário ser maior de 18 anos para completar o processo KYC.');
+    return;
+  }
+  
+  // Verificar se a data não é futura
+  if (birthdateObj > today) {
+    callback(false, 'A data de nascimento não pode ser no futuro.');
+    return;
+  }
+  
+  // Verificar se o CPF é válido usando a função interna
+  if (!validarCPF(cpf)) {
+    callback(false, 'O CPF informado é inválido.');
+    return;
+  }
+  
+  // Alguns CPFs que usaremos para simular falhas específicas (apenas para demonstração):
+  const testCases = {
+    '12345678909': { isValid: false, message: 'CPF não encontrado na base de dados.' },
+    '11111111111': { isValid: false, message: 'CPF inválido ou cancelado na Receita Federal.' },
+    '22222222222': { isValid: false, message: 'Nome não corresponde ao registrado neste CPF.' },
+    '33333333333': { isValid: false, message: 'Data de nascimento não corresponde ao registrado neste CPF.' }
+  };
+  
+  // Verificar se é um caso de teste
+  if (testCases[cpf]) {
+    callback(testCases[cpf].isValid, testCases[cpf].message);
+    return;
+  }
+  
+  // Como não temos uma API real, vamos fazer uma simulação estatística:
+  // 95% de chance de aprovação
+  const randomValue = Math.random();
+  if (randomValue > 0.95) {
+    // 5% de chance de falha genérica
+    const errorMessages = [
+      'CPF não encontrado na base de dados.',
+      'Não foi possível validar os dados no momento. Tente novamente mais tarde.',
+      'Inconsistência nos dados informados. Verifique e tente novamente.'
+    ];
+    const randomError = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+    callback(false, randomError);
+  } else {
+    // 95% de chance de sucesso
+    callback(true, 'Dados verificados com sucesso.');
+  }
 }

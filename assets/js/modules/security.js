@@ -192,35 +192,109 @@ function formatCPF(e) {
 function validatePhone() {
   const phoneInput = document.getElementById('kyc-phone');
   const phone = phoneInput.value.replace(/\D/g, '');
+  const feedbackElement = document.getElementById('phone-feedback');
 
-  // Validação mais rigorosa para formato brasileiro:
-  // - DDD precisa começar com dígito entre 1-9
-  // - Para celular: 11 dígitos total (com o 9 na frente)
-  // - Para telefone fixo: 10 dígitos total
+  // Verificar comprimento básico
   if (phone.length < 10 || phone.length > 11) {
     showValidationError(phoneInput, 'Telefone deve ter 10 ou 11 dígitos');
+    
+    if (feedbackElement) {
+      feedbackElement.style.display = 'block';
+      feedbackElement.style.color = '#e11d48';
+      feedbackElement.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="margin-right: 5px;"></i> Formato inválido. Use (XX) XXXXX-XXXX para celular ou (XX) XXXX-XXXX para fixo.';
+    }
+    
     return false;
   }
   
-  // Verificar se o DDD começa com um dígito válido
-  if (!/^[1-9]/.test(phone)) {
+  // Extrair DDD e número
+  const ddd = phone.substring(0, 2);
+  const number = phone.substring(2);
+  
+  // Lista de DDDs válidos do Brasil
+  const validDDDs = [
+    '11', '12', '13', '14', '15', '16', '17', '18', '19', // São Paulo
+    '21', '22', '24', '27', '28',                         // Rio de Janeiro, Espírito Santo
+    '31', '32', '33', '34', '35', '37', '38',             // Minas Gerais
+    '41', '42', '43', '44', '45', '46', '47', '48', '49', // Paraná, Santa Catarina
+    '51', '53', '54', '55',                               // Rio Grande do Sul
+    '61', '62', '63', '64', '65', '66', '67', '68', '69', // Centro-Oeste e Tocantins
+    '71', '73', '74', '75', '77', '79',                   // Bahia, Sergipe
+    '81', '82', '83', '84', '85', '86', '87', '88', '89', // Nordeste
+    '91', '92', '93', '94', '95', '96', '97', '98', '99'  // Norte
+  ];
+  
+  // Verificar se o DDD é válido
+  if (!validDDDs.includes(ddd)) {
     showValidationError(phoneInput, 'DDD inválido');
+    
+    if (feedbackElement) {
+      feedbackElement.style.display = 'block';
+      feedbackElement.style.color = '#e11d48';
+      feedbackElement.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="margin-right: 5px;"></i> DDD ' + ddd + ' não é um código de área válido no Brasil.';
+    }
+    
     return false;
   }
   
-  // Se for celular (11 dígitos), o primeiro dígito após DDD deve ser 9
-  if (phone.length === 11 && phone.charAt(2) !== '9') {
-    showValidationError(phoneInput, 'Celular deve começar com 9 após o DDD');
+  // Verificar tipo de telefone (celular ou fixo)
+  if (phone.length === 11) {
+    // Celular: deve começar com 9 após o DDD
+    if (number.charAt(0) !== '9') {
+      showValidationError(phoneInput, 'Celular deve começar com 9 após o DDD');
+      
+      if (feedbackElement) {
+        feedbackElement.style.display = 'block';
+        feedbackElement.style.color = '#e11d48';
+        feedbackElement.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="margin-right: 5px;"></i> Celulares no Brasil devem começar com 9 após o DDD.';
+      }
+      
+      return false;
+    }
+  } else {
+    // Telefone fixo: não pode começar com 0 ou 9
+    if (number.charAt(0) === '0' || number.charAt(0) === '9') {
+      showValidationError(phoneInput, 'Número fixo inválido');
+      
+      if (feedbackElement) {
+        feedbackElement.style.display = 'block';
+        feedbackElement.style.color = '#e11d48';
+        feedbackElement.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="margin-right: 5px;"></i> Telefones fixos não podem começar com 0 ou 9 após o DDD.';
+      }
+      
+      return false;
+    }
+  }
+  
+  // Verificar números repetidos ou sequências óbvias
+  const isAllSameDigits = /^(\d)\1+$/.test(number);
+  const isSimpleSequence = /^(0123456789|1234567890|9876543210|0987654321)$/.test(number);
+  
+  if (isAllSameDigits || isSimpleSequence) {
+    showValidationError(phoneInput, 'Número de telefone inválido');
+    
+    if (feedbackElement) {
+      feedbackElement.style.display = 'block';
+      feedbackElement.style.color = '#e11d48';
+      feedbackElement.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="margin-right: 5px;"></i> Este número de telefone parece ser inválido.';
+    }
+    
     return false;
   }
   
-  // Padrão final: (XX) XXXXX-XXXX para celular ou (XX) XXXX-XXXX para fixo
-  if (!/^([1-9]{2})(9[0-9]{8}|[1-8][0-9]{7})$/.test(phone)) {
-    showValidationError(phoneInput, 'Formato de telefone inválido');
-    return false;
-  }
-
+  // Se chegou até aqui, o telefone é válido
   clearValidationError(phoneInput);
+  
+  if (feedbackElement) {
+    feedbackElement.style.display = 'block';
+    feedbackElement.style.color = '#047857';
+    feedbackElement.innerHTML = '<i class="bi bi-check-circle-fill" style="margin-right: 5px;"></i> Número de telefone válido';
+  }
+  
+  // Destacar positivamente o campo
+  phoneInput.style.borderColor = '#10b981';
+  phoneInput.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
+  
   return true;
 }
 
@@ -246,14 +320,45 @@ function formatPhone(e) {
     input.value = value;
   }
   
-  // Verificar enquanto digita se o primeiro dígito após DDD é 9 (para celular)
-  if (value.length >= 3 && value.length <= 11) {
-    if (value.length === 11 && value.charAt(2) !== '9') {
-      // Mostrar dica visual
+  // Verificação em tempo real
+  if (value.length > 2) {
+    const ddd = value.substring(0, 2);
+    const validDDDs = [
+      '11', '12', '13', '14', '15', '16', '17', '18', '19',
+      '21', '22', '24', '27', '28',
+      '31', '32', '33', '34', '35', '37', '38',
+      '41', '42', '43', '44', '45', '46', '47', '48', '49',
+      '51', '53', '54', '55',
+      '61', '62', '63', '64', '65', '66', '67', '68', '69',
+      '71', '73', '74', '75', '77', '79',
+      '81', '82', '83', '84', '85', '86', '87', '88', '89',
+      '91', '92', '93', '94', '95', '96', '97', '98', '99'
+    ];
+    
+    // Verificar DDD
+    if (!validDDDs.includes(ddd)) {
       input.style.borderColor = '#f59e0b';
       const parent = input.parentNode;
       
-      // Verificar se já existe um aviso, se não, criar um
+      let warningElement = parent.querySelector('.phone-warning');
+      if (!warningElement) {
+        warningElement = document.createElement('div');
+        warningElement.className = 'phone-warning';
+        warningElement.style.color = '#f59e0b';
+        warningElement.style.fontSize = '0.8rem';
+        warningElement.style.marginTop = '5px';
+        parent.appendChild(warningElement);
+      }
+      
+      warningElement.textContent = 'DDD ' + ddd + ' parece não ser válido no Brasil';
+      return;
+    }
+    
+    // Verificar se é celular (11 dígitos) e começa com 9
+    if (value.length === 11 && value.charAt(2) !== '9') {
+      input.style.borderColor = '#f59e0b';
+      const parent = input.parentNode;
+      
       let warningElement = parent.querySelector('.phone-warning');
       if (!warningElement) {
         warningElement = document.createElement('div');
@@ -265,12 +370,35 @@ function formatPhone(e) {
       }
       
       warningElement.textContent = 'Celular deve começar com 9 após o DDD';
+    } else if (value.length === 10 && (value.charAt(2) === '0' || value.charAt(2) === '9')) {
+      // Verificar telefone fixo (10 dígitos)
+      input.style.borderColor = '#f59e0b';
+      const parent = input.parentNode;
+      
+      let warningElement = parent.querySelector('.phone-warning');
+      if (!warningElement) {
+        warningElement = document.createElement('div');
+        warningElement.className = 'phone-warning';
+        warningElement.style.color = '#f59e0b';
+        warningElement.style.fontSize = '0.8rem';
+        warningElement.style.marginTop = '5px';
+        parent.appendChild(warningElement);
+      }
+      
+      warningElement.textContent = 'Telefone fixo não deve começar com 0 ou 9 após o DDD';
     } else {
-      // Remover a dica visual
+      // Remover a dica visual se tudo está ok
       input.style.borderColor = '';
       const warningElement = input.parentNode.querySelector('.phone-warning');
       if (warningElement) {
         warningElement.remove();
+      }
+      
+      // Adicionando feedback visual positivo se o número estiver completo
+      if ((value.length === 10 && value.charAt(2) !== '0' && value.charAt(2) !== '9') || 
+          (value.length === 11 && value.charAt(2) === '9')) {
+        input.style.borderColor = '#10b981';
+        input.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
       }
     }
   }

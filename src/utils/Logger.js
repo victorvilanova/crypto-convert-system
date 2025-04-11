@@ -1,126 +1,89 @@
 /**
- * Níveis de log disponíveis
- * @enum {string}
+ * logger.js
+ * Utilitário para registrar logs do sistema
  */
-import winston from 'winston';
 
-export const LogLevel = {
-  DEBUG: 'debug',
-  INFO: 'info',
-  WARN: 'warn',
-  ERROR: 'error',
-};
+const winston = require('winston');
+const path = require('path');
+const fs = require('fs');
+
+// Criar diretório de logs se não existir
+const logDir = path.resolve(__dirname, '../../logs');
+if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+}
+
+// Formato personalizado para os logs
+const customFormat = winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.printf(({ timestamp, level, message, ...meta }) => {
+        const metaStr = Object.keys(meta).length ? JSON.stringify(meta) : '';
+        return `[${timestamp}] ${level.toUpperCase()}: ${message} ${metaStr}`;
+    })
+);
+
+// Configurar os transportes (destinos) dos logs
+const logger = winston.createLogger({
+    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+    format: customFormat,
+    transports: [
+        // Logs de erro são salvos em um arquivo separado
+        new winston.transports.File({ 
+            filename: path.join(logDir, 'error.log'), 
+            level: 'error',
+            maxsize: 5242880, // 5MB
+            maxFiles: 5
+        }),
+        // Todos os logs são salvos neste arquivo
+        new winston.transports.File({ 
+            filename: path.join(logDir, 'combined.log'),
+            maxsize: 5242880, // 5MB
+            maxFiles: 10
+        }),
+        // Logs específicos de email
+        new winston.transports.File({
+            filename: path.join(logDir, 'email.log'),
+            level: 'info',
+            maxsize: 5242880, // 5MB
+            maxFiles: 5
+        })
+    ]
+});
+
+// Em desenvolvimento, também mostrar logs no console
+if (process.env.NODE_ENV !== 'production') {
+    logger.add(new winston.transports.Console({
+        format: winston.format.combine(
+            winston.format.colorize(),
+            customFormat
+        )
+    }));
+}
 
 /**
- * Classe responsável pelo gerenciamento de logs da aplicação
+ * Registra um log específico de envio de email
+ * @param {string} to - Destinatário do email
+ * @param {string} subject - Assunto do email
+ * @param {boolean} success - Se o envio foi bem-sucedido
+ * @param {string} messageId - ID da mensagem (se sucesso)
+ * @param {Error} error - Erro (se falha)
  */
-export class Logger {
-  /**
-   * @param {string} module - Nome do módulo que está utilizando o logger
-   */
-  constructor(module) {
-    this.module = module;
-    // Define o nível mínimo de log baseado no ambiente
-    this.minLevel =
-      CONFIG && CONFIG.environment === 'production' ? LogLevel.INFO : LogLevel.DEBUG;
+logger.logEmailSent = (to, subject, success, messageId, error) => {
+    const level = success ? 'info' : 'error';
+    const message = success 
+        ? `Email enviado para ${to} com assunto "${subject}" (ID: ${messageId})` 
+        : `Falha ao enviar email para ${to} com assunto "${subject}"`;
     
-    // Configuração do Winston logger
-    this.logger = winston.createLogger({
-      level: this.minLevel,
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      ),
-      defaultMeta: { module },
-      transports: [
-        // Escreve todos os logs para o console
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.colorize(),
-            winston.format.printf(({ timestamp, level, message, module, data }) => {
-              let log = `${timestamp} [${level}] [${module}]: ${message}`;
-              if (data) {
-                log += ` | ${JSON.stringify(data)}`;
-              }
-              return log;
-            })
-          ),
-        }),
-      ],
+    logger.log({
+        level,
+        message,
+        module: 'email',
+        to,
+        subject,
+        success,
+        ...(messageId && { messageId }),
+        ...(error && { error: error.message, stack: error.stack })
     });
-    
-    // Adiciona transporte para erros em produção
-    if (CONFIG && CONFIG.environment === 'production') {
-      // Aqui poderia adicionar transporte para um serviço de logs externo
-      // como Sentry, LogRocket, etc.
-    }
-  }
+};
 
-  /**
-   * Registra um log com o nível, mensagem e dados especificados
-   * @param {LogLevel} level - Nível do log
-   * @param {string} message - Mensagem descritiva
-   * @param {Object} [data] - Dados adicionais para o log
-   * @private
-   */
-  _log(level, message, data) {
-    this.logger.log(level, message, { data });
-  }
-
-  /**
-   * Registra um log de nível DEBUG
-   * @param {string} message - Mensagem descritiva
-   * @param {Object} [data] - Dados adicionais
-   */
-  debug(message, data) {
-    this._log(LogLevel.DEBUG, message, data);
-  }
-
-  /**
-   * Registra um log de nível INFO
-   * @param {string} message - Mensagem descritiva
-   * @param {Object} [data] - Dados adicionais
-   */
-  info(message, data) {
-    this._log(LogLevel.INFO, message, data);
-  }
-
-  /**
-   * Registra um log de nível WARN
-   * @param {string} message - Mensagem descritiva
-   * @param {Object} [data] - Dados adicionais
-   */
-  warn(message, data) {
-    this._log(LogLevel.WARN, message, data);
-  }
-
-  /**
-   * Registra um log de nível ERROR
-   * @param {string} message - Mensagem descritiva
-   * @param {Error|Object} [error] - Erro ou dados adicionais
-   */
-  error(message, error) {
-    let errorData = {};
-
-    if (error instanceof Error) {
-      errorData = {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        ...(error.data || {}),
-      };
-    } else if (error) {
-      errorData = error;
-    }
-
-    this._log(LogLevel.ERROR, message, errorData);
-  }
-}
-
-// Exportando uma instância para uso global
-export const logger = new Logger('app');
-
-// Função auxiliar para criar instâncias de logger específicas para cada módulo
-export function getLogger(module) {
-  return new Logger(module);
-}
+module.exports = logger;

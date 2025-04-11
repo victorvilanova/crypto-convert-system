@@ -121,3 +121,56 @@ git merge --no-ff staging
 - Cotações em tempo real
 - Logging estruturado e monitoramento
 - Segurança aprimorada
+
+## Recursos
+
+- Sistema de conversão de criptomoedas em tempo real
+- Verificação KYC (Know Your Customer) completa
+- Sistema de envio de emails via SMTP para verificação de usuários
+- Dashboard administrativo
+- Histórico de transações
+
+## Sistema de Verificação KYC
+
+O sistema FastCripto implementa um fluxo de verificação KYC (Know Your Customer) completo, incluindo:
+
+1. **Verificação de Email**: Envio de código de verificação via SMTP usando nodemailer
+2. **Validação de Documentos**: Sistema para upload e verificação de documentos
+3. **Verificação de CPF**: Integração com validação de CPF
+4. **Validação de Telefone**: Validação e formatação automática de números brasileiros
+
+### Níveis de Verificação
+
+- **BASIC**: Email verificado
+- **TIER1**: Email + Documentos básicos (CPF/RG)
+- **TIER2**: Email + Documentos + Comprovante de residência e selfie
+
+Para configurar o serviço de email, consulte a [documentação de configuração](docs/email-setup.md).
+
+## Instalação
+
+1. Clone o repositório:
+   ```
+   git clone https://github.com/fastcripto/crypto-convert-system.git
+   ```
+
+2. Instale as dependências:
+   ```
+   npm install
+   ```
+
+3. Configure o arquivo `.env` com base no exemplo `.env.example`:
+   ```
+   cp .env.example .env
+   ```
+   Em seguida, edite o arquivo `.env` com as configurações corretas.
+
+4. Inicie o servidor:
+   ```
+   npm start
+   ```
+
+Para desenvolvimento, use:
+```
+npm run dev
+```
